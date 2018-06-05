@@ -581,7 +581,8 @@
 <h3 id="标记-清除算法-mark-Sweep"><a href="#标记-清除算法-mark-Sweep" class="headerlink" title="标记-清除算法(mark-Sweep)"></a>标记-清除算法(mark-Sweep)</h3><p>这是最基础，最容易想到的方式了，实现方式也很简单，就是标记出需要回收的对象，然后直接将该对象所占用的内存空间释放掉</p>
 <p>虽然看似很合理，也确定达到了回收空余内存空间的效果，但是由于被回收的对象可能分散于不同的内存地址中，所以这种方式的缺点在于</p>
 <p>可能会产生大量的内存碎片，在进行大对象的内存分配时会因为找不到足够大的连续内存空间而再次触发GC，虽然此时可使用的内存空间远远大于需要分配的空间</p>
-<h3 id="标记-整理算法-mark-Compact"><a href="#标记-整理算法-mark-Compact" class="headerlink" title="标记-整理算法(mark-Compact)"></a>标记-整理算法(mark-Compact)</h3><h3 id="复制算法-Copying"><a href="#复制算法-Copying" class="headerlink" title="复制算法(Copying)"></a>复制算法(Copying)</h3>
+<h3 id="标记-整理算法-mark-Compact"><a href="#标记-整理算法-mark-Compact" class="headerlink" title="标记-整理算法(mark-Compact)"></a>标记-整理算法(mark-Compact)</h3><p>标记-整理算法前面的标记部分与标记清除算法没什么区别，主要的</p>
+<h3 id="复制算法-Copying"><a href="#复制算法-Copying" class="headerlink" title="复制算法(Copying)"></a>复制算法(Copying)</h3>
           
         
       

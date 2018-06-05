@@ -581,8 +581,20 @@
 <h3 id="标记-清除算法-mark-Sweep"><a href="#标记-清除算法-mark-Sweep" class="headerlink" title="标记-清除算法(mark-Sweep)"></a>标记-清除算法(mark-Sweep)</h3><p>这是最基础，最容易想到的方式了，实现方式也很简单，就是标记出需要回收的对象，然后直接将该对象所占用的内存空间释放掉</p>
 <p>虽然看似很合理，也确定达到了回收空余内存空间的效果，但是由于被回收的对象可能分散于不同的内存地址中，所以这种方式的缺点在于</p>
 <p>可能会产生大量的内存碎片，在进行大对象的内存分配时会因为找不到足够大的连续内存空间而再次触发GC，虽然此时可使用的内存空间远远大于需要分配的空间</p>
-<h3 id="标记-整理算法-mark-Compact"><a href="#标记-整理算法-mark-Compact" class="headerlink" title="标记-整理算法(mark-Compact)"></a>标记-整理算法(mark-Compact)</h3><p>标记-整理算法前面的标记部分与标记清除算法没什么区别，主要的</p>
-<h3 id="复制算法-Copying"><a href="#复制算法-Copying" class="headerlink" title="复制算法(Copying)"></a>复制算法(Copying)</h3>
+<p><img src="https://images2015.cnblogs.com/blog/952935/201707/952935-20170718145706943-277352405.jpg" alt="标记清除"></p>
+<h3 id="标记-整理算法-mark-Compact"><a href="#标记-整理算法-mark-Compact" class="headerlink" title="标记-整理算法(mark-Compact)"></a>标记-整理算法(mark-Compact)</h3><p>标记-整理算法前面的标记部分与标记清除算法没什么区别，主要区别在于在进行回收之前，会将判断为存活的对象先向内存地址一端移动</p>
+<p>随后直接回收掉边界之外的部分，这个算法的优点是避免了内存碎片的产生，提高了内存使用率，缺点的话是多了一步对象在内存中移动的操作，若对象较多，效率较慢</p>
+<p>回收前:<br><img src="https://images2015.cnblogs.com/blog/952935/201707/952935-20170718215424927-56787255.jpg" alt="标记整理"></p>
+<p>回收后:<br><img src="https://images2015.cnblogs.com/blog/952935/201707/952935-20170718215901661-508081730.jpg" alt="标记整理"></p>
+<h3 id="复制算法-Copying"><a href="#复制算法-Copying" class="headerlink" title="复制算法(Copying)"></a>复制算法(Copying)</h3><p>复制算法的主要思想是：将当前内存区域分为两块，每次只使用其中一块,在内存不够需要进行gc的时候，先将当前存活的对象复制到另一块内存区域中</p>
+<p>然后直接清空当前内存区域</p>
+<p>回收前:<br><img src="https://images2015.cnblogs.com/blog/952935/201707/952935-20170718162044224-1548239645.jpg" alt="复制算法"></p>
+<p>回收后:<br><img src="https://images2015.cnblogs.com/blog/952935/201707/952935-20170718163315818-1469674020.jpg" alt="复制算法"></p>
+<h2 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h2><p>JVM 内存模型中将java堆按照存储对象的存活时间长短，划分为了新生代和老年代</p>
+<p>根据存储的java对象的使用场景不同，不同的分代选择的收集算法也不同</p>
+<p>其中新生代使用的是优化之后的复制算法，老年代的话使用的是标记-清除和标记整理（不同收集器使用的算法不同）</p>
+<h2 id="收集器"><a href="#收集器" class="headerlink" title="收集器"></a>收集器</h2><p>###</p>
+
           
         
       

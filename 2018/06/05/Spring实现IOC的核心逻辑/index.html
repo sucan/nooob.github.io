@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="description" content="最近戾气太重,心态爆炸，只有写两行代码这样子  通过ClassPathXmlApplicationContext来初始化容器全过程通常使用方式：  content = new ClassPathXmlApplicationContext(new String[]{                     &amp;quot;classpath*:/config/spring/common/appcont">
 <meta name="keywords" content="日常学习,Spring,IOC">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring实现IOC的核心逻辑">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/05/Spring实现IOC的核心逻辑/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta property="og:description" content="最近戾气太重,心态爆炸，只有写两行代码这样子  通过ClassPathXmlApplicationContext来初始化容器全过程通常使用方式：  content = new ClassPathXmlApplicationContext(new String[]{                     &amp;quot;classpath*:/config/spring/common/appcont">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-05T05:44:00.000Z">
+<meta property="og:updated_time" content="2018-06-11T05:25:26.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring实现IOC的核心逻辑">
-<meta name="twitter:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="twitter:description" content="最近戾气太重,心态爆炸，只有写两行代码这样子  通过ClassPathXmlApplicationContext来初始化容器全过程通常使用方式：  content = new ClassPathXmlApplicationContext(new String[]{                     &amp;quot;classpath*:/config/spring/common/appcont">
 
 
 
@@ -386,7 +386,74 @@
       
 
       
-        
+        <blockquote>
+<p>最近戾气太重,心态爆炸，只有写两行代码这样子</p>
+</blockquote>
+<h1 id="通过ClassPathXmlApplicationContext来初始化容器全过程"><a href="#通过ClassPathXmlApplicationContext来初始化容器全过程" class="headerlink" title="通过ClassPathXmlApplicationContext来初始化容器全过程"></a>通过ClassPathXmlApplicationContext来初始化容器全过程</h1><h2 id="通常使用方式："><a href="#通常使用方式：" class="headerlink" title="通常使用方式："></a>通常使用方式：</h2><blockquote>
+</blockquote>
+<pre><code>content = new ClassPathXmlApplicationContext(new String[]{
+                    &quot;classpath*:/config/spring/common/appcontext-*.xml&quot;,
+                    &quot;classpath*:config/spring/local/appcontext-*.xml&quot;});
+</code></pre><blockquote>
+</blockquote>
+<p>ClassPathXmlApplicationContext 按照传入的配置文件来对容器进行初始化</p>
+<h2 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h2><p>观察源码发现最终调用的方法是<code>AbstractApplicationContext</code>的<code>refresh</code>方法<br><code>refresh</code>方法的具体实现如下</p>
+<blockquote>
+</blockquote>
+<pre><code>public void refresh() throws BeansException, IllegalStateException {
+        synchronized (this.startupShutdownMonitor) {
+            // Prepare this context for refreshing.
+            prepareRefresh();
+            // Tell the subclass to refresh the internal bean factory.
+            ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+            // Prepare the bean factory for use in this context.
+            prepareBeanFactory(beanFactory);
+
+            try {
+                // Allows post-processing of the bean factory in context subclasses.
+                postProcessBeanFactory(beanFactory);
+
+                // Invoke factory processors registered as beans in the context.
+                invokeBeanFactoryPostProcessors(beanFactory);
+
+                // Register bean processors that intercept bean creation.
+                registerBeanPostProcessors(beanFactory);
+
+                // Initialize message source for this context.
+                initMessageSource();
+
+                // Initialize event multicaster for this context.
+                initApplicationEventMulticaster();
+
+                // Initialize other special beans in specific context subclasses.
+                onRefresh();
+
+                // Check for listener beans and register them.
+                registerListeners();
+
+                // Instantiate all remaining (non-lazy-init) singletons.
+                finishBeanFactoryInitialization(beanFactory);
+
+                // Last step: publish corresponding event.
+                finishRefresh();
+            }
+
+            catch (BeansException ex) {
+                // Destroy already created singletons to avoid dangling resources.
+                beanFactory.destroySingletons();
+
+                // Reset &apos;active&apos; flag.
+                cancelRefresh(ex);
+
+                // Propagate exception to caller.
+                throw ex;
+            }
+        }
+    }
+</code></pre><blockquote>
+</blockquote>
+<h3 id="解析xml文件"><a href="#解析xml文件" class="headerlink" title="解析xml文件"></a>解析xml文件</h3>
       
     </div>
 
@@ -481,8 +548,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/littledog.jpg"
@@ -554,6 +630,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#通过ClassPathXmlApplicationContext来初始化容器全过程"><span class="nav-number">1.</span> <span class="nav-text">通过ClassPathXmlApplicationContext来初始化容器全过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#通常使用方式："><span class="nav-number">1.1.</span> <span class="nav-text">通常使用方式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码解析"><span class="nav-number">1.2.</span> <span class="nav-text">源码解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#解析xml文件"><span class="nav-number">1.2.1.</span> <span class="nav-text">解析xml文件</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

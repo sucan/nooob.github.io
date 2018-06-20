@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="日常学习,源码,cglib,动态代理," />
 
 
 
@@ -87,17 +87,18 @@
 
 
 
-<meta name="description" content="可以叫我菜鸡程序员,但请不要叫我码农">
-<meta name="keywords" content="可以叫我菜鸡程序员,但请不要叫我码农">
-<meta property="og:type" content="website">
-<meta property="og:title" content="noob">
-<meta property="og:url" content="http://blog.kuangenping.com/tags/redis/index.html">
+<meta name="description" content="每天看看新东西,心情也要好上许多  问题 cglib是如何实现动态代理的 cglib如何支持类的代理 cglib和jdk的动态代理有什么区别  使用方式cglib不属于jdk的一部分,因此要使用需要先引入相应的包,maven依赖如下 &amp;lt;dependency&amp;gt;     &amp;lt;groupId&amp;gt;cglib&amp;lt;/groupId&amp;gt;     &amp;lt;artifactId&amp;gt;">
+<meta name="keywords" content="日常学习,源码,cglib,动态代理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cglib实现动态代理原理">
+<meta property="og:url" content="http://blog.kuangenping.com/2018/06/20/cglib实现动态代理原理/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta property="og:description" content="每天看看新东西,心情也要好上许多  问题 cglib是如何实现动态代理的 cglib如何支持类的代理 cglib和jdk的动态代理有什么区别  使用方式cglib不属于jdk的一部分,因此要使用需要先引入相应的包,maven依赖如下 &amp;lt;dependency&amp;gt;     &amp;lt;groupId&amp;gt;cglib&amp;lt;/groupId&amp;gt;     &amp;lt;artifactId&amp;gt;">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-06-20T16:03:01.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="noob">
-<meta name="twitter:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="twitter:title" content="cglib实现动态代理原理">
+<meta name="twitter:description" content="每天看看新东西,心情也要好上许多  问题 cglib是如何实现动态代理的 cglib如何支持类的代理 cglib和jdk的动态代理有什么区别  使用方式cglib不属于jdk的一部分,因此要使用需要先引入相应的包,maven依赖如下 &amp;lt;dependency&amp;gt;     &amp;lt;groupId&amp;gt;cglib&amp;lt;/groupId&amp;gt;     &amp;lt;artifactId&amp;gt;">
 
 
 
@@ -125,13 +126,13 @@
 
 
 
-  <link rel="canonical" href="http://blog.kuangenping.com/tags/redis/"/>
+  <link rel="canonical" href="http://blog.kuangenping.com/2018/06/20/cglib实现动态代理原理/"/>
 
 
 
 
 
-  <title> 标签: redis | noob </title>
+  <title> cglib实现动态代理原理 | noob </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -166,7 +167,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left  ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -270,46 +271,236 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-collapse">
-    <div class="collection-title">
-      <h2 >
-        redis
-        <small>标签</small>
-      </h2>
-    </div>
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/06/20/cglib实现动态代理原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sucan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/littledog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="noob">
+    </span>
 
     
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                cglib实现动态代理原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-20T23:24:23+08:00">
+                2018-06-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/学习/" itemprop="url" rel="index">
+                    <span itemprop="name">学习</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/06/20/cglib实现动态代理原理/" class="leancloud_visitors" data-flag-title="cglib实现动态代理原理">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
       
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+      
+        <blockquote>
+<p>每天看看新东西,心情也要好上许多</p>
+</blockquote>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>cglib是如何实现动态代理的</li>
+<li>cglib如何支持类的代理</li>
+<li>cglib和jdk的动态代理有什么区别</li>
+</ol>
+<h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><p>cglib不属于jdk的一部分,因此要使用需要先引入相应的包,maven依赖如下</p>
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;cglib&lt;/groupId&gt;
+    &lt;artifactId&gt;cglib&lt;/artifactId&gt;
+    &lt;version&gt;3.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre><p>另外因为spring的aop有使用cglib的实现，因此如果项目引入了spring-core包，那么spring-core包下面已经包含了cglib</p>
+<p>使用例子</p>
+<p>Test.java</p>
+<pre><code>public class Test {
 
-      <h1 class="post-title">
+    public static void main(String args[]){
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(TestCglib.class);
+        enhancer.setCallback(new CglibMethodInterceptor());
+        TestCglib testCglib = (TestCglib)enhancer.create();
+        testCglib.sayBye(&quot;asdsd&quot;);
+    }
+}
+</code></pre><p>TestCglib.java</p>
+<pre><code>public class TestCglib {
+    public String sayHi(String str){
+        System.out.println(&quot;我是被代理的sayHi方法&quot;);
+        return str;
+    }
+
+    public String sayBye(String str){
+        System.out.println(&quot;我是被代理的sayBye方法&quot;);
+        return str;
+    }
+}
+</code></pre><p>CglibMethodInterceptor.java</p>
+<pre><code>public class CglibMethodInterceptor implements MethodInterceptor {
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        System.out.println(method.getName()+&quot;执行之前做一些准备工作&quot;);
+        Object result = methodProxy.invokeSuper(o,objects);
+        System.out.println(method.getName()+&quot;执行之后做一些准备的工作&quot;);
+        return result;
+    }
+}
+</code></pre><h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1>
+      
+    </div>
+
+    <div>
+      
         
-            <a class="post-title-link" href="/2017/11/16/redis/" itemprop="url">
-              
-                <span itemprop="name">redis相关,不定期更新</span>
-              
-            </a>
+
+      
+    </div>
+
+    <div>
+      
         
-      </h1>
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-11-16T22:37:00+08:00"
-              content="2017-11-16" >
-          11-16
-        </time>
-      </div>
+      
+    </div>
 
-    </header>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/日常学习/" rel="tag"># 日常学习</a>
+          
+            <a href="/tags/源码/" rel="tag"># 源码</a>
+          
+            <a href="/tags/cglib/" rel="tag"># cglib</a>
+          
+            <a href="/tags/动态代理/" rel="tag"># 动态代理</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/15/springAop实现原理/" rel="next" title="springAop实现原理">
+                <i class="fa fa-chevron-left"></i> springAop实现原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </article>
 
 
-    
-  </div>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
           
           </div>
@@ -317,6 +508,10 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -336,8 +531,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/littledog.jpg"
@@ -409,6 +613,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -519,6 +739,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
 
   
 

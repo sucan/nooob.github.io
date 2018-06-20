@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
+<meta name="description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 想要弄懂的问题 jdk的动态代理是如何实现的 jdk的动态代理为什么只支持接口代理  使用方式TestProxy testProxy = (TestProxy) Proxy.new">
 <meta name="keywords" content="日常学习,源码,proxy">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JDK实现的动态代理源码分析">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/04/26/Proxy/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
+<meta property="og:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 想要弄懂的问题 jdk的动态代理是如何实现的 jdk的动态代理为什么只支持接口代理  使用方式TestProxy testProxy = (TestProxy) Proxy.new">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-20T11:39:57.000Z">
+<meta property="og:updated_time" content="2018-06-20T12:53:47.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JDK实现的动态代理源码分析">
-<meta name="twitter:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
+<meta name="twitter:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 想要弄懂的问题 jdk的动态代理是如何实现的 jdk的动态代理为什么只支持接口代理  使用方式TestProxy testProxy = (TestProxy) Proxy.new">
 
 
 
@@ -390,6 +390,10 @@
 <p>“对于懂的含义，应当是在看完之后能够自己实现出来”</p>
 </blockquote>
 <p>Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理<br>本文只讨论基于jDK的代理</p>
+<h1 id="想要弄懂的问题"><a href="#想要弄懂的问题" class="headerlink" title="想要弄懂的问题"></a>想要弄懂的问题</h1><ol>
+<li>jdk的动态代理是如何实现的</li>
+<li>jdk的动态代理为什么只支持接口代理</li>
+</ol>
 <h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><pre><code>TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoader(), new Class[]{TestProxy.class}, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -398,6 +402,12 @@
             }
         });
         testProxy.sayBye();
+</code></pre><p>TestProxy.java</p>
+<pre><code>public interface TestProxy {
+    void sayHi();
+
+    void sayBye();
+}
 </code></pre><p>通常调用场景就是使用<em>Proxy</em>类的<code>newProxyInstance</code>方法，先来看看方法签名</p>
 <pre><code>public static Object newProxyInstance(ClassLoader loader,
                                           Class&lt;?&gt;[] interfaces,
@@ -410,9 +420,99 @@
 </ol>
 <h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>实现其实很简单，核心逻辑用一句话就可以概括：<br>使用ProxyGenerator.generateProxyClass生成二进制class文件，然后用类加载器加载进内存，最后使用构造器构造实例<br>(ps:当前具体实现是没有这么简单的，具体实现还包括一些安全性校验，以及提高效率使用的二级缓存策略这些,但是这不是本文讨论的重点，因此暂不详细描述)</p>
 <p>其中重点当然就是生成的代理类啦，我们在原来的代码加入下面这个一行代码，将生成的class文件保存下来</p>
-<blockquote>
-<p>   System.getProperties().put(“sun.misc.ProxyGenerator.saveGeneratedFiles”,”true”);</p>
-</blockquote>
+<pre><code>System.getProperties().put(&quot;sun.misc.ProxyGenerator.saveGeneratedFiles&quot;,&quot;true&quot;);
+</code></pre><p>生成的class文件如下：</p>
+<p>$Proxy0.class</p>
+<pre><code>package com.sun.proxy;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.UndeclaredThrowableException;
+
+public final class $Proxy0 extends Proxy implements TestProxy {
+    private static Method m1;
+    private static Method m3;
+    private static Method m4;
+    private static Method m0;
+    private static Method m2;
+
+    public $Proxy0(InvocationHandler var1) throws  {
+        super(var1);
+    }
+
+    public final boolean equals(Object var1) throws  {
+        try {
+            return ((Boolean)super.h.invoke(this, m1, new Object[]{var1})).booleanValue();
+        } catch (RuntimeException | Error var3) {
+            throw var3;
+        } catch (Throwable var4) {
+            throw new UndeclaredThrowableException(var4);
+        }
+    }
+
+    public final void sayBye() throws  {
+        try {
+            super.h.invoke(this, m3, (Object[])null);
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+
+    public final void sayHi() throws  {
+        try {
+            super.h.invoke(this, m4, (Object[])null);
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+
+    public final int hashCode() throws  {
+        try {
+            return ((Integer)super.h.invoke(this, m0, (Object[])null)).intValue();
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+
+    public final String toString() throws  {
+        try {
+            return (String)super.h.invoke(this, m2, (Object[])null);
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+
+    static {
+        try {
+            m1 = Class.forName(&quot;java.lang.Object&quot;).getMethod(&quot;equals&quot;, Class.forName(&quot;java.lang.Object&quot;));
+            m3 = Class.forName(&quot;TestProxy&quot;).getMethod(&quot;sayBye&quot;);
+            m4 = Class.forName(&quot;TestProxy&quot;).getMethod(&quot;sayHi&quot;);
+            m0 = Class.forName(&quot;java.lang.Object&quot;).getMethod(&quot;hashCode&quot;);
+            m2 = Class.forName(&quot;java.lang.Object&quot;).getMethod(&quot;toString&quot;);
+        } catch (NoSuchMethodException var2) {
+            throw new NoSuchMethodError(var2.getMessage());
+        } catch (ClassNotFoundException var3) {
+            throw new NoClassDefFoundError(var3.getMessage());
+        }
+    }
+}
+</code></pre><p>可以看到除了<em>TestProxy</em>的两个方法<code>sayHi</code>，<code>sayBy</code>之外<br>还有<code>hashcode</code>,<code>toString</code>,<code>equals</code> 这三个<em>Object</em>类自带的方法<br>至于为什么非要有这三个方法，我暂时也没弄明白…..</p>
+<p>不管这个奇怪的逻辑，我们来看<code>sayHi</code>和<code>sayBy</code> 的具体实现，发现调用过程其实是先用反射拿到TestProxy的method<br>然后调用之前传入的<em>InvocationHandler</em>实例的<code>invoke</code>方法，将对应的method和params传入,然后由实例内部的逻辑去处理</p>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>Q: jdk的动态代理是如何实现的<br>A: 读取传入的interface的method信息，生成实现对应方法的字节码文件，然后具体实现就是调用传入的InvocationHandler的invoke方法</p>
+<p>Q: jdk的动态代理为什么只支持接口代理<br>A: 由生成的类结构可以看出，代理类是继承了Proxy类然后实现代理接口的，由于java的单继承策略,所以没办法继续继承实现类</p>
+<h1 id="一些思考"><a href="#一些思考" class="headerlink" title="一些思考"></a>一些思考</h1><ol>
+<li>为什么生成的代理类要继承Proxy类?</li>
+<li>为什么<code>invoke</code>方法中有一个参数是proxy</li>
+</ol>
 
       
     </div>
@@ -604,7 +704,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#想要弄懂的问题"><span class="nav-number">1.</span> <span class="nav-text">想要弄懂的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结论"><span class="nav-number">4.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一些思考"><span class="nav-number">5.</span> <span class="nav-text">一些思考</span></a></li></ol></div>
             
 
           </div>

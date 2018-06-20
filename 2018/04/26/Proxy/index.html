@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”">
+<meta name="description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
 <meta name="keywords" content="日常学习,源码,proxy">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JDK实现的动态代理源码分析">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/04/26/Proxy/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”">
+<meta property="og:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-02T02:58:30.000Z">
+<meta property="og:updated_time" content="2018-06-20T11:39:57.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JDK实现的动态代理源码分析">
-<meta name="twitter:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”">
+<meta name="twitter:description" content="“对于懂的含义，应当是在看完之后能够自己实现出来”  Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理本文只讨论基于jDK的代理 使用方式TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoade">
 
 
 
@@ -389,6 +389,30 @@
         <blockquote>
 <p>“对于懂的含义，应当是在看完之后能够自己实现出来”</p>
 </blockquote>
+<p>Spring使用的动态代理一共有两种方式，一种是基于Jdk的proxy类的只支持接口层面的代理，另一种是基于cglib能支持实现类的代理<br>本文只讨论基于jDK的代理</p>
+<h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><pre><code>TestProxy testProxy = (TestProxy) Proxy.newProxyInstance(TestProxy.class.getClassLoader(), new Class[]{TestProxy.class}, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                System.out.println(&quot;invoke method:&quot;+method.getName()+&quot; args:&quot;+args);
+                return null;
+            }
+        });
+        testProxy.sayBye();
+</code></pre><p>通常调用场景就是使用<em>Proxy</em>类的<code>newProxyInstance</code>方法，先来看看方法签名</p>
+<pre><code>public static Object newProxyInstance(ClassLoader loader,
+                                          Class&lt;?&gt;[] interfaces,
+                                          InvocationHandler h)
+</code></pre><p>参数有3个，含义如下:</p>
+<ol>
+<li>loader:类加载器，用于将生成的class文件加载进内存(方法区)</li>
+<li>interfaces:代理类要实现的接口,只支持接口，不支持实现类</li>
+<li>h:InvocationHandler最终所有方法的调用都会走到它的<code>invoke</code>方法</li>
+</ol>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>实现其实很简单，核心逻辑用一句话就可以概括：<br>使用ProxyGenerator.generateProxyClass生成二进制class文件，然后用类加载器加载进内存，最后使用构造器构造实例<br>(ps:当前具体实现是没有这么简单的，具体实现还包括一些安全性校验，以及提高效率使用的二级缓存策略这些,但是这不是本文讨论的重点，因此暂不详细描述)</p>
+<p>其中重点当然就是生成的代理类啦，我们在原来的代码加入下面这个一行代码，将生成的class文件保存下来</p>
+<blockquote>
+<p>   System.getProperties().put(“sun.misc.ProxyGenerator.saveGeneratedFiles”,”true”);</p>
+</blockquote>
 
       
     </div>
@@ -488,8 +512,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/littledog.jpg"
@@ -561,6 +594,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

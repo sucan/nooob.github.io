@@ -87,18 +87,20 @@
 
 
 
-<meta name="description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景">
+<meta name="description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景通常使用JDK的executor框架来构建线程池和提交任务 ExecutorService executorService = Executors.newFixedThreadPool(10); executorService.submit(new Callable&amp;lt;String&amp;gt;()">
 <meta name="keywords" content="日常学习,源码,Threadpoolexecutor">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Threadpoolexecutor源码学习">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/02/Threadpoolexecutor源码学习/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景">
+<meta property="og:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景通常使用JDK的executor框架来构建线程池和提交任务 ExecutorService executorService = Executors.newFixedThreadPool(10); executorService.submit(new Callable&amp;lt;String&amp;gt;()">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-25T04:49:14.000Z">
+<meta property="og:image" content="http://blog.kuangenping.com/images/threadPoolExecutor.png">
+<meta property="og:updated_time" content="2018-07-03T15:45:32.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Threadpoolexecutor源码学习">
-<meta name="twitter:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景">
+<meta name="twitter:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景通常使用JDK的executor框架来构建线程池和提交任务 ExecutorService executorService = Executors.newFixedThreadPool(10); executorService.submit(new Callable&amp;lt;String&amp;gt;()">
+<meta name="twitter:image" content="http://blog.kuangenping.com/images/threadPoolExecutor.png">
 
 
 
@@ -391,7 +393,168 @@
 <li>线程的创建销毁策略</li>
 <li>如何实现</li>
 </ol>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>通常使用JDK的executor框架来构建线程池和提交任务</p>
+<pre><code>ExecutorService executorService = Executors.newFixedThreadPool(10);
+executorService.submit(new Callable&lt;String&gt;() {
+            @Override
+            public String call() throws Exception {
+                dosomething();
+                return null;
+            }
+        });
+</code></pre><p>在executor框架中，ExecutorService有多个实现类，本文主要介绍的也是我们最常使用的为ThreadPoolExecutor</p>
+<h2 id="参数说明"><a href="#参数说明" class="headerlink" title="参数说明"></a>参数说明</h2><p>构造函数：</p>
+<pre><code>public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue&lt;Runnable&gt; workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) {
+        if (corePoolSize &lt; 0 ||
+            maximumPoolSize &lt;= 0 ||
+            maximumPoolSize &lt; corePoolSize ||
+            keepAliveTime &lt; 0)
+            throw new IllegalArgumentException();
+        if (workQueue == null || threadFactory == null || handler == null)
+            throw new NullPointerException();
+        this.corePoolSize = corePoolSize;
+        this.maximumPoolSize = maximumPoolSize;
+        this.workQueue = workQueue;
+        this.keepAliveTime = unit.toNanos(keepAliveTime);
+        this.threadFactory = threadFactory;
+        this.handler = handler;
+    }
+</code></pre><ol>
+<li>corePoolSize</li>
+</ol>
+<p>核心线程数,线程池内恒定线程数量</p>
+<ol start="2">
+<li>maximumPoolSize</li>
+</ol>
+<p>最大线程数，线程池内运行存在的最大线程数</p>
+<ol start="3">
+<li>keepAliveTime</li>
+</ol>
+<p>非核心线程的过期时间</p>
+<ol start="4">
+<li>unit</li>
+</ol>
+<p>过期时间的单位</p>
+<ol start="5">
+<li>workQueue</li>
+</ol>
+<p>用于存放任务的工作队列</p>
+<ol start="6">
+<li>threadFactory</li>
+</ol>
+<p>线程工厂，用于生产线程</p>
+<ol start="7">
+<li>handler</li>
+</ol>
+<p>拒绝策略，当线程池中线程达到最大数量时，对新提交的任务的拒绝策略</p>
+<h2 id="类结构图"><a href="#类结构图" class="headerlink" title="类结构图"></a>类结构图</h2><p><img src="/images/threadPoolExecutor.png" alt="threadPool"></p>
+<p>ThreadPoolExecutor 继承于 AbstractExecutorService，实现了Executor以及ExecutorService接口<br>因此同时包含submit和execute方法，我们先从最核心的execute方法来进行分析</p>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><p>execute方法源码如下：</p>
+<pre><code>int c = ctl.get();
+        if (workerCountOf(c) &lt; corePoolSize) {
+            if (addWorker(command, true))
+                return;
+            c = ctl.get();
+        }
+        if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) &amp;&amp; remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                addWorker(null, false);
+        }
+        else if (!addWorker(command, false))
+            reject(command);
+</code></pre><p>其中比较重要的一个变量是ctl,这是一个AtomicInteger变量，其中高3位表示线程池状态，低29位表示线程数量<br>我们继续看源码，假设我们现在的场景是刚刚初始化了一个线程池，核心线程数为3，最大线程数为5</p>
+<p>首先是调用<code>workerCountOf</code>方法来获得当前线程数，我们现在是第一次提交任务，因此当前线程数为0，小于核心线程数3，因此会执行<code>addWorker</code>方法<br>我们继续debug到<code>addWorker</code>方法里，看看都做了些什么操作。</p>
+<p><code>addWorker</code>一共做了两个操作，我们先来看看第一部分</p>
+<p>step 1:对ctl做cas操作增加线程数</p>
+<pre><code>retry:
+        for (;;) {
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            // Check if queue empty only if necessary.
+            if (rs &gt;= SHUTDOWN &amp;&amp;
+                ! (rs == SHUTDOWN &amp;&amp;
+                   firstTask == null &amp;&amp;
+                   ! workQueue.isEmpty()))
+                return false;
+
+            for (;;) {
+                int wc = workerCountOf(c);
+                if (wc &gt;= CAPACITY ||
+                    wc &gt;= (core ? corePoolSize : maximumPoolSize))
+                    return false;
+                if (compareAndIncrementWorkerCount(c))
+                    break retry;
+                c = ctl.get();  // Re-read ctl
+                if (runStateOf(c) != rs)
+                    continue retry;
+                // else CAS failed due to workerCount change; retry inner loop
+            }
+        }
+</code></pre><ol>
+<li>首先先检查了一下当前线程池的状态，若当前状态不接受新的work则直接返回false</li>
+<li>然后就是检查当前线程数是否超过限制，对于核心线程来说是不能超过核心线程数也就是3，对于其他线程来说是不能超过最大线程数，也就是5</li>
+<li>然后就是cas操作，增加线程数，若成功，则跳出循环</li>
+<li>操作3在并发情况下有可能出现操作失败的场景，若失败则先检查一下当前线程池状态是否发生变化，若变化了则跳到步骤1<br>若状态未发生变化则跳到操作2</li>
+</ol>
+<p>在成功添加线程数之后就开始真正地添加任务了</p>
+<p>step 2 添加worker</p>
+<pre><code>boolean workerStarted = false;
+boolean workerAdded = false;
+Worker w = null;
+try {
+    final ReentrantLock mainLock = this.mainLock;
+    w = new Worker(firstTask);
+    final Thread t = w.thread;
+    if (t != null) {
+        mainLock.lock();
+        try {
+            // Recheck while holding lock.
+            // Back out on ThreadFactory failure or if
+            // shut down before lock acquired.
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            if (rs &lt; SHUTDOWN ||
+                (rs == SHUTDOWN &amp;&amp; firstTask == null)) {
+                if (t.isAlive()) // precheck that t is startable
+                    throw new IllegalThreadStateException();
+                workers.add(w);
+                int s = workers.size();
+                if (s &gt; largestPoolSize)
+                    largestPoolSize = s;
+                workerAdded = true;
+            }
+        } finally {
+            mainLock.unlock();
+        }
+        if (workerAdded) {
+            t.start();
+            workerStarted = true;
+        }
+    }
+} finally {
+    if (! workerStarted)
+        addWorkerFailed(w);
+}
+return workerStarted;
+</code></pre><p>可以看到首先是将task做为入参<em>new</em>了一个<em>Worker</em>的对象,我们先去看看<em>Worker</em>对象的构造函数</p>
+<pre><code>Worker(Runnable firstTask) {
+            setState(-1); // inhibit interrupts until runWorker
+            this.firstTask = firstTask;
+            this.thread = getThreadFactory().newThread(this);
+        }
+</code></pre><p><em>Worker</em>是<em>ThreadPoolExecutor</em>的一个内部类继承了<em>AbstractQueuedSynchronizer</em>实现了<em>Runnable</em>接口<br>构造函数做的事情就是将aqs的state置为-1，并使用我们提供的线程工厂创建一个线程，然后这里需要注意的一点是这里调用newThread方法传的参数是this，也就是说创建的所有线程实际运行的时候都是执行的<em>Worker</em>类的<br>run方法</p>
+
       
     </div>
 
@@ -582,7 +745,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数说明"><span class="nav-number">3.</span> <span class="nav-text">参数说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类结构图"><span class="nav-number">4.</span> <span class="nav-text">类结构图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">5.</span> <span class="nav-text">源码分析</span></a></li></ol></div>
             
 
           </div>

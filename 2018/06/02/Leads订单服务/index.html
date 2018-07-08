@@ -87,18 +87,20 @@
 
 
 
-<meta name="description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="description" content="目标教培由于是一个新业务团队，正处于业务探索期，因此业务产品变化快且多，为了能够更好地支持业务的发展，以及便于后续系统维护在教培原有的订单系统上，抽象出了leads订单系统。 场景教培拥有很多种类型的订单，如预约，400电话等，之前是一类订单分别维护一套库表和服务，从技术上来看这并没有什么问题，但是通过分析业务场景发现，对于商家来说，其实商家并不关心你这个到底是什么类型的订单，商家在乎的只是通过各">
 <meta name="keywords" content="美团点评">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Leads订单服务">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/02/Leads订单服务/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta property="og:description" content="目标教培由于是一个新业务团队，正处于业务探索期，因此业务产品变化快且多，为了能够更好地支持业务的发展，以及便于后续系统维护在教培原有的订单系统上，抽象出了leads订单系统。 场景教培拥有很多种类型的订单，如预约，400电话等，之前是一类订单分别维护一套库表和服务，从技术上来看这并没有什么问题，但是通过分析业务场景发现，对于商家来说，其实商家并不关心你这个到底是什么类型的订单，商家在乎的只是通过各">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-02T02:50:20.000Z">
+<meta property="og:image" content="http://blog.kuangenping.com/images/leads.png">
+<meta property="og:updated_time" content="2018-07-08T09:45:12.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Leads订单服务">
-<meta name="twitter:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="twitter:description" content="目标教培由于是一个新业务团队，正处于业务探索期，因此业务产品变化快且多，为了能够更好地支持业务的发展，以及便于后续系统维护在教培原有的订单系统上，抽象出了leads订单系统。 场景教培拥有很多种类型的订单，如预约，400电话等，之前是一类订单分别维护一套库表和服务，从技术上来看这并没有什么问题，但是通过分析业务场景发现，对于商家来说，其实商家并不关心你这个到底是什么类型的订单，商家在乎的只是通过各">
+<meta name="twitter:image" content="http://blog.kuangenping.com/images/leads.png">
 
 
 
@@ -386,7 +388,17 @@
       
 
       
-        
+        <h1 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h1><p>教培由于是一个新业务团队，正处于业务探索期，因此业务产品变化快且多，为了能够更好地支持业务的发展，以及便于后续系统维护<br>在教培原有的订单系统上，抽象出了leads订单系统。</p>
+<h1 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h1><p>教培拥有很多种类型的订单，如预约，400电话等，之前是一类订单分别维护一套<br>库表和服务，从技术上来看这并没有什么问题，但是通过分析业务场景发现，对于商家来说，其实商家并不关心<br>你这个到底是什么类型的订单，商家在乎的只是通过各种功能的服务收集到了多少有意向的用户，也就是我们说的leads<br>然后其中商家最主要的，最想要的其实只有一个手机号，并且多种类型的订单之间也有部分共性，每次有新功能开发，都需要<br>分别在几个地方写一写逻辑相同的代码，因此，在此基础上，我们以手机号为主体，抽象出了一个新的底层服务，leads订单服务</p>
+<h1 id="现有架构"><a href="#现有架构" class="headerlink" title="现有架构"></a>现有架构</h1><p><img src="/images/leads.png" alt="leads订单"></p>
+<p>如上图，所有以手机号为主体的订单或者其他记录，都能够很好地融入到新的leads系统中，同时服务内部采用了<br>合理的模块划分，能够在不对原系统做任务更改的情况下，快速地添加新的订单类型，和之前相比，大大缩短了开发工期，方便了系统的维护</p>
+<h1 id="新的挑战"><a href="#新的挑战" class="headerlink" title="新的挑战"></a>新的挑战</h1><ol>
+<li><p>新的订单可能包含的属性与原来的其他订单完全不同，数据库表不可复用<br>解决方案：在此基础上添加了订单属性表，以k-v的形式对展示属性进行存储</p>
+</li>
+<li><p>所有订单全部收归到了一起，历史存量+每日增量数据量较大，会导致慢查询的产生<br>解决方案：<br>一个方案是可以像原来那样，一套订单维护一套库表，缺点同之前一样，并且数据量还是会越来越大<br>另一方案是分表，这也是业界普遍使用的策略，但是有个问题就在于分表如何分，是水平拆分还是垂直拆分，<br>若使用水平拆分，分表键如何选择等问题，一个想法是按照时间来分表，最近3个月的为实时表，其他为历史表<br>历史表运行慢查询，总之分表的话涉及到的东西太多，目前还在实践中，等实践完成之后再来更新吧</p>
+</li>
+</ol>
+
       
     </div>
 
@@ -481,8 +493,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/littledog.jpg"
@@ -554,6 +575,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#目标"><span class="nav-number">1.</span> <span class="nav-text">目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#场景"><span class="nav-number">2.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#现有架构"><span class="nav-number">3.</span> <span class="nav-text">现有架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#新的挑战"><span class="nav-number">4.</span> <span class="nav-text">新的挑战</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

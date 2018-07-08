@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的 reentrantlock与">
+<meta name="description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
 <meta name="keywords" content="日常学习,源码,reentrantlock,condition">
 <meta property="og:type" content="article">
 <meta property="og:title" content="reentrantlock源码学习">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/02/reentrantlock源码学习/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的 reentrantlock与">
+<meta property="og:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-22T01:49:02.000Z">
+<meta property="og:updated_time" content="2018-07-08T14:59:42.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="reentrantlock源码学习">
-<meta name="twitter:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的 reentrantlock与">
+<meta name="twitter:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
 
 
 
@@ -391,9 +391,114 @@
 </blockquote>
 <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
 <li>reentrantlock如何实现锁机制的</li>
-<li>reentrantlock与</li>
 </ol>
-
+<h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><pre><code>reentrantLock.lock();
+try{
+    dosomething();
+}finally {
+    reentrantLock.unlock();
+}
+</code></pre><h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h1 id="lock"><a href="#lock" class="headerlink" title="lock"></a>lock</h1><p>首先，我们先来看看<code>lock</code>方法都做了什么</p>
+<pre><code>public void lock() {
+        sync.lock();
+    }
+</code></pre><p>可以看到实际上调用的是<em>sync</em>的<code>lock</code>方法，sync为ReentrantLock的一个内部类<br>一共有两种实现，一种是NonfairSync公平锁，一种是FairSync非公平锁，如果不指定的话，ReentrantLock默认是使用的非公平锁<br>我们先来看看NonfairSync的<code>lock</code>方法</p>
+<pre><code>if (compareAndSetState(0, 1))
+    setExclusiveOwnerThread(Thread.currentThread());
+else
+    acquire(1);
+</code></pre><p>因为NonfairSync是继承了aqs的,因此使用的是aqs中的<code>compareAndSetState</code>方法,尝试将state置为1，若成功则说明当前无其他线程<br>占用锁，当前线程自动获得锁，并将ExclusiveOwnerThread设置为当前线程<br>若抢占锁失败，则调用<code>acquire</code>方法，继续分享<code>acquire</code>方法</p>
+<pre><code>if (!tryAcquire(arg) &amp;&amp;
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            selfInterrupt();
+</code></pre><p>首先是调用<code>tryAcquire</code>方法尝试再次获得锁,因为我们使用的是NonfairSync，因此实际执行的方法为<em>NonfairSync</em>中的<code>nonfairTryAcquire</code>方法</p>
+<pre><code>final Thread current = Thread.currentThread();
+            int c = getState();
+            if (c == 0) {
+                if (compareAndSetState(0, acquires)) {
+                    setExclusiveOwnerThread(current);
+                    return true;
+                }
+            }
+            else if (current == getExclusiveOwnerThread()) {
+                int nextc = c + acquires;
+                if (nextc &lt; 0) // overflow
+                    throw new Error(&quot;Maximum lock count exceeded&quot;);
+                setState(nextc);
+                return true;
+            }
+            return false;
+</code></pre><p>可以看到<code>nonfairTryAcquire</code>方法中依然是先尝试用cas操作去抢占锁，若失败的话，则判断当前尝试获取锁的线程是否为<br>ExclusiveOwnerThread，若是的话将当前state+1，这里的操作就是为称之为可重入式锁的原因</p>
+<p>若<code>tryAcquire</code>方法执行失败，则调用<code>acquireQueued</code>方法将当前线程扔进队列里排队<br>我们先来看看<code>addWaiter</code>方法</p>
+<pre><code>Node node = new Node(Thread.currentThread(), mode);
+       // Try the fast path of enq; backup to full enq on failure
+       Node pred = tail;
+       if (pred != null) {
+           node.prev = pred;
+           if (compareAndSetTail(pred, node)) {
+               pred.next = node;
+               return node;
+           }
+       }
+       enq(node);
+       return node;
+</code></pre><p>主要完成的事是新建一个包含当前线程的节点，然后将此节点插入队尾插入成功之后返回这个节点<br>其中的<code>enq</code>方法的作用为循环执行上诉添加节点到队尾的逻辑，主要是防止并发场景下上一步添加节点操作失败<br>然后我们来查看<code>acquireQueued</code>方法</p>
+<pre><code>boolean failed = true;
+        try {
+            boolean interrupted = false;
+            for (;;) {
+                final Node p = node.predecessor();
+                if (p == head &amp;&amp; tryAcquire(arg)) {
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return interrupted;
+                }
+                if (shouldParkAfterFailedAcquire(p, node) &amp;&amp;
+                    parkAndCheckInterrupt())
+                    interrupted = true;
+            }
+        } finally {
+            if (failed)
+                cancelAcquire(node);
+        }
+</code></pre><p>这里做的事情主要是循环检查当前节点是否为头节点之后的第一个节点，如果是的话则尝试抢占锁，若锁抢占成功<br>则将当前节点设置为头节点，并返回，否则的话便一直循环，其实至此一个非公平的可重入锁已经完全实现了,但是有个问题就是现在所有等待锁<br>的线程其实都在执行一个循环的操作，系统中运行的线程数并没有减少，这样会相当耗费资源，jdk是怎么解决这个问题的呢，接着往下分析</p>
+<p>首先是<code>shouldParkAfterFailedAcquire</code>方法</p>
+<pre><code>int ws = pred.waitStatus;
+if (ws == Node.SIGNAL)
+    /*
+     * This node has already set status asking a release
+     * to signal it, so it can safely park.
+     */
+    return true;
+if (ws &gt; 0) {
+    /*
+     * Predecessor was cancelled. Skip over predecessors and
+     * indicate retry.
+     */
+    do {
+        node.prev = pred = pred.prev;
+    } while (pred.waitStatus &gt; 0);
+    pred.next = node;
+} else {
+    /*
+     * waitStatus must be 0 or PROPAGATE.  Indicate that we
+     * need a signal, but don&apos;t park yet.  Caller will need to
+     * retry to make sure it cannot acquire before parking.
+     */
+    compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+}
+return false;
+</code></pre><ol>
+<li>若当前节点的前一个节点的状态为Node.SIGNAL,则说明前一个节点获得了一个信号量，即将被唤醒，因此当前节点的线程可以被阻塞掉，直接返回true</li>
+<li>若前一个节点的状态为CANCEL，则从当前节点的前一个节点开始，依次去掉cancel掉的节点</li>
+<li>若前一个节点的状态既不是SIGNAL也不是CANCEL,则将前一个节点的状态置为SIGNAL</li>
+</ol>
+<p>若<code>shouldParkAfterFailedAcquire</code>方法返回了true，也就是场景1，那么接下来会执行<br><code>parkAndCheckInterrupt</code>方法，此方法的目的就是将当前线程状态置为WAITING，此状态CPU不会为其分配时间片，需要显式地被其他线程唤醒</p>
+<pre><code>LockSupport.park(this);
+return Thread.interrupted();
+</code></pre><p>至此加锁的逻辑我们已经全部过完了，接着来看看释放锁的逻辑</p>
+<h1 id="unlock"><a href="#unlock" class="headerlink" title="unlock"></a>unlock</h1>
       
     </div>
 
@@ -586,7 +691,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源码分析"><span class="nav-number">3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#lock"><span class="nav-number">4.</span> <span class="nav-text">lock</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unlock"><span class="nav-number">5.</span> <span class="nav-text">unlock</span></a></li></ol></div>
             
 
           </div>

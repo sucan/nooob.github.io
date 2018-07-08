@@ -561,10 +561,15 @@ ex
 
 问题
 reentrantlock如何实现锁机制的
-reentrantlock与
 
-
-          
+使用方式reentrantLock.lock();
+try{
+    dosomething();
+}finally {
+    reentrantLock.unlock();
+}
+源码分析lock首先，我们先来看看loc
+          ...
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/06/02/reentrantlock源码学习/#more" rel="contents">

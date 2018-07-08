@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="noob">
 <meta property="og:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-08T14:59:42.000Z">
+<meta property="og:updated_time" content="2018-07-08T15:01:35.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="reentrantlock源码学习">
 <meta name="twitter:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
@@ -402,7 +402,7 @@ try{
 <pre><code>public void lock() {
         sync.lock();
     }
-</code></pre><p>可以看到实际上调用的是<em>sync</em>的<code>lock</code>方法，sync为ReentrantLock的一个内部类<br>一共有两种实现，一种是NonfairSync公平锁，一种是FairSync非公平锁，如果不指定的话，ReentrantLock默认是使用的非公平锁<br>我们先来看看NonfairSync的<code>lock</code>方法</p>
+</code></pre><p>可以看到实际上调用的是<em>sync</em>的<code>lock</code>方法，sync为ReentrantLock的一个内部类<br>一共有两种实现，一种是NonfairSync非公平锁，一种是FairSync公平锁，如果不指定的话，ReentrantLock默认是使用的非公平锁<br>我们先来看看NonfairSync的<code>lock</code>方法</p>
 <pre><code>if (compareAndSetState(0, 1))
     setExclusiveOwnerThread(Thread.currentThread());
 else

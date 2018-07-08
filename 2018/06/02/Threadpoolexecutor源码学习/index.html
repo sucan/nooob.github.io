@@ -96,7 +96,7 @@
 <meta property="og:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景通常使用JDK的executor框架来构建线程池和提交任务 ExecutorService executorService = Executors.newFixedThreadPool(10); executorService.submit(new Callable&amp;lt;String&amp;gt;()">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://blog.kuangenping.com/images/threadPoolExecutor.png">
-<meta property="og:updated_time" content="2018-07-03T15:45:32.000Z">
+<meta property="og:updated_time" content="2018-07-08T08:50:42.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Threadpoolexecutor源码学习">
 <meta name="twitter:description" content="问题 Threadpoolexecutor 各个参数的含义 线程的创建销毁策略 如何实现  使用场景通常使用JDK的executor框架来构建线程池和提交任务 ExecutorService executorService = Executors.newFixedThreadPool(10); executorService.submit(new Callable&amp;lt;String&amp;gt;()">
@@ -546,7 +546,6 @@ try {
     if (! workerStarted)
         addWorkerFailed(w);
 }
-return workerStarted;
 </code></pre><p>可以看到首先是将task做为入参<em>new</em>了一个<em>Worker</em>的对象,我们先去看看<em>Worker</em>对象的构造函数</p>
 <pre><code>Worker(Runnable firstTask) {
             setState(-1); // inhibit interrupts until runWorker
@@ -554,6 +553,151 @@ return workerStarted;
             this.thread = getThreadFactory().newThread(this);
         }
 </code></pre><p><em>Worker</em>是<em>ThreadPoolExecutor</em>的一个内部类继承了<em>AbstractQueuedSynchronizer</em>实现了<em>Runnable</em>接口<br>构造函数做的事情就是将aqs的state置为-1，并使用我们提供的线程工厂创建一个线程，然后这里需要注意的一点是这里调用newThread方法传的参数是this，也就是说创建的所有线程实际运行的时候都是执行的<em>Worker</em>类的<br>run方法</p>
+<p>接下来就是将<em>Worker</em>对象添加进<em>workers</em>中，在添加前同样会先判断当前线程池的状态是否可以添加线程<br>另外由于<em>workers</em>是一个hashSet，hashSet底层又是调用的hashmap因此是线程不安全的，所以此处还使用了一个全局的<em>ReentrantLock</em>来对添加方法加锁</p>
+<p>如果添加线程成功的话，则会启动该线程，若失败的话则会调用<code>addWorkerFailed</code>方法，<code>addWorkerFailed</code>做的事就是把<em>Worker</em>对象从<em>workers</em>中移除，并将当前线程数减1<br>同时调用<code>tryTerminate</code>尝试终止线程池。</p>
+<p><code>tryTerminate</code>方法主要做的事情有:</p>
+<ol>
+<li>若当前线程池的状态不可终止，则不做任何事</li>
+<li>若线程池的状态为可以终止状态，但工作队列不为空，则interrupt掉<em>workers</em>中的一个线程</li>
+<li>若线程池的状态为可以终止状态且工作队列为空，将当前线程池状态置为TERMINATED</li>
+</ol>
+<p>前面说到了启动线程其实是调用<em>Worker</em>的<code>run</code>方法，我们去看看<code>run</code>方法里面到底做了什么</p>
+<p><code>run</code>调用的是父类中的<code>runWork</code>方法，代码如下</p>
+<pre><code>Thread wt = Thread.currentThread();
+        Runnable task = w.firstTask;
+        w.firstTask = null;
+        w.unlock(); // allow interrupts
+        boolean completedAbruptly = true;
+        try {
+            while (task != null || (task = getTask()) != null) {
+                w.lock();
+                // If pool is stopping, ensure thread is interrupted;
+                // if not, ensure thread is not interrupted.  This
+                // requires a recheck in second case to deal with
+                // shutdownNow race while clearing interrupt
+                if ((runStateAtLeast(ctl.get(), STOP) ||
+                     (Thread.interrupted() &amp;&amp;
+                      runStateAtLeast(ctl.get(), STOP))) &amp;&amp;
+                    !wt.isInterrupted())
+                    wt.interrupt();
+                try {
+                    beforeExecute(wt, task);
+                    Throwable thrown = null;
+                    try {
+                        task.run();
+                    } catch (RuntimeException x) {
+                        thrown = x; throw x;
+                    } catch (Error x) {
+                        thrown = x; throw x;
+                    } catch (Throwable x) {
+                        thrown = x; throw new Error(x);
+                    } finally {
+                        afterExecute(task, thrown);
+                    }
+                } finally {
+                    task = null;
+                    w.completedTasks++;
+                    w.unlock();
+                }
+            }
+            completedAbruptly = false;
+        } finally {
+            processWorkerExit(w, completedAbruptly);
+        }
+</code></pre><p>去掉一些不重要的逻辑我们可以看到<code>runWork</code>方法就是用当前线程不停地去取task，然后调用task的run方法<br>task可以是一开始创建这个work时初始化的，也可以是调用<code>getTask</code>方法获取到的</p>
+<p><code>getTask</code>方法如下：</p>
+<pre><code>boolean timedOut = false; // Did the last poll() time out?
+
+        retry:
+        for (;;) {
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            // Check if queue empty only if necessary.
+            if (rs &gt;= SHUTDOWN &amp;&amp; (rs &gt;= STOP || workQueue.isEmpty())) {
+                decrementWorkerCount();
+                return null;
+            }
+
+            boolean timed;      // Are workers subject to culling?
+
+            for (;;) {
+                int wc = workerCountOf(c);
+                timed = allowCoreThreadTimeOut || wc &gt; corePoolSize;
+
+                if (wc &lt;= maximumPoolSize &amp;&amp; ! (timedOut &amp;&amp; timed))
+                    break;
+                if (compareAndDecrementWorkerCount(c))
+                    return null;
+                c = ctl.get();  // Re-read ctl
+                if (runStateOf(c) != rs)
+                    continue retry;
+                // else CAS failed due to workerCount change; retry inner loop
+            }
+
+            try {
+                Runnable r = timed ?
+                    workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
+                    workQueue.take();
+                if (r != null)
+                    return r;
+                timedOut = true;
+            } catch (InterruptedException retry) {
+                timedOut = false;
+            }
+        }
+</code></pre><p>这个方法做的事就是从一个阻塞队列中获取值，其中比较重要的一些状态的判断逻辑</p>
+<ol>
+<li>当前线程池状态为SHUTDOWN并且workqueue为空，或者当前线程池状态为STOP时直接返回null</li>
+<li>若当前线程数大于了最大线程数，减少一个线程数，并返回null</li>
+<li>如若当前线程数大于核心线程数或者设置了允许核心线程数过期，同时从workqueue队列中取数据超时，返回null，减少一个线程数</li>
+</ol>
+<p>至此，当当前线程数小于核心线程数时的全部流程我们走过一遍了，接下来我们再回到一开始的<code>execute</code>方法，看看当前线程数大于核心线程数时的策略</p>
+<pre><code>if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) &amp;&amp; remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                addWorker(null, false);
+        }
+        else if (!addWorker(command, false))
+            reject(command);
+</code></pre><ol>
+<li>若当前线程池的状态为RUNNING并且，向workQueue中添加任务成功，则进行recheck操作</li>
+<li>recheck操作主要是防止添加任务之后线程池状态变更，以及在设置了过期时间之后，当前线程全部过期的场景</li>
+<li>如果添加任务失败，或者出现线程池状态变更，则进行reject操作</li>
+</ol>
+<p>reject操作实际上就是调用我们自定义的或者默认的<code>RejectedExecutionHandler</code></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上面我们已经把线程池的核心代码全部梳理了一遍，下面我们就来把这些零散的东西总结一下</p>
+<h3 id="线程池的几种状态"><a href="#线程池的几种状态" class="headerlink" title="线程池的几种状态"></a>线程池的几种状态</h3><p>线程池一共有5种状态，分别为Running、ShutDown、Stop、Tidying、Terminated</p>
+<ol>
+<li>Running</li>
+</ol>
+<p>当线程池初始化完成之后就为Running状态，此状态可以正常地接收任务并处理任务</p>
+<ol start="2">
+<li>ShutDown</li>
+</ol>
+<p>当主动调用了<code>shutdown</code>方法之后，若当前状态为Running，则会将状态修改为ShutDown<br>并且<code>shutdown</code>方法会调用</p>
+<pre><code>interruptIdleWorkers(false);
+</code></pre><p>此方法的作用是调用当前所有线程的<code>interrupt</code>方法，将当前所有线程标记为中断状态<br>然后又<code>addWork</code>可知，一旦当前状态不是Running的时候，是不会添加新的任务的，<br>因此，ShutDown状态的线程池的状态是：不接受新任务添加，但会处理已有任务</p>
+<ol start="3">
+<li>Stop</li>
+</ol>
+<p>当主动调用<code>shutdownNow</code>方法后，若当前状态为Running，或者ShutDown，则将当前状态置为Stop<br>此状态与ShutDown的区别在于，<code>shutdownNow</code>方法会移除掉当前workQueue中的所有任务。<br>因此当前状态的线程池的状态是：不接受新任务添加，且不执行未执行的任务</p>
+<ol start="4">
+<li>Tidying</li>
+</ol>
+<p>当当前线程池中线程数为0，并且workQueue为空时，当前线程池状态为Tidying</p>
+<ol start="5">
+<li>Terminated</li>
+</ol>
+<p>当执行完<code>terminated</code>方法后，线程池的状态会被置为Terminated</p>
+<h3 id="线程池的添加策略"><a href="#线程池的添加策略" class="headerlink" title="线程池的添加策略"></a>线程池的添加策略</h3><ol>
+<li>若当前线程数小于核心线程数则添加一个<em>Work</em>也就是一个线程</li>
+<li>若当前线程数大于等于核心线程数则向<em>workQueue</em>也就是参数中的工作队列中添加一个task</li>
+<li>若当前线程数大于等于核心线程数并且<em>workQueue</em>队列已满，则添加一个非核心线程</li>
+<li>若当前线程数大于等于最大线程数，则使用定义好的拒绝策略拒绝掉此次任务</li>
+</ol>
 
       
     </div>
@@ -745,7 +889,7 @@ return workerStarted;
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数说明"><span class="nav-number">3.</span> <span class="nav-text">参数说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类结构图"><span class="nav-number">4.</span> <span class="nav-text">类结构图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">5.</span> <span class="nav-text">源码分析</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参数说明"><span class="nav-number">3.</span> <span class="nav-text">参数说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类结构图"><span class="nav-number">4.</span> <span class="nav-text">类结构图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">5.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池的几种状态"><span class="nav-number">6.1.</span> <span class="nav-text">线程池的几种状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程池的添加策略"><span class="nav-number">6.2.</span> <span class="nav-text">线程池的添加策略</span></a></li></ol></li></ol></div>
             
 
           </div>

@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="noob">
 <meta property="og:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-08T15:01:35.000Z">
+<meta property="og:updated_time" content="2018-07-09T05:00:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="reentrantlock源码学习">
 <meta name="twitter:description" content="没什么事，只是瞎写写  问题 reentrantlock如何实现锁机制的  使用方式reentrantLock.lock(); try{     dosomething(); }finally {     reentrantLock.unlock(); } 源码分析lock首先，我们先来看看lock方法都做了什么 public void lock() {         sync.lock();">
@@ -497,8 +497,28 @@ return false;
 <p>若<code>shouldParkAfterFailedAcquire</code>方法返回了true，也就是场景1，那么接下来会执行<br><code>parkAndCheckInterrupt</code>方法，此方法的目的就是将当前线程状态置为WAITING，此状态CPU不会为其分配时间片，需要显式地被其他线程唤醒</p>
 <pre><code>LockSupport.park(this);
 return Thread.interrupted();
-</code></pre><p>至此加锁的逻辑我们已经全部过完了，接着来看看释放锁的逻辑</p>
-<h1 id="unlock"><a href="#unlock" class="headerlink" title="unlock"></a>unlock</h1>
+</code></pre><p>至此加锁的逻辑我们已经全部过完了，这是非公平锁的逻辑，公平锁的话大部分代码都相同<br>只是在cas操作前需要检查一下当前等待队列是否为空，接着来看看释放锁的逻辑</p>
+<h1 id="unlock"><a href="#unlock" class="headerlink" title="unlock"></a>unlock</h1><p><code>unlock</code>方法调用的aqs的<code>release</code>方法</p>
+<pre><code>if (tryRelease(arg)) {
+    Node h = head;
+    if (h != null &amp;&amp; h.waitStatus != 0)
+        unparkSuccessor(h);
+    return true;
+}
+return false;
+</code></pre><p><code>tryRelease</code>方法如下：</p>
+<pre><code>int c = getState() - releases;
+            if (Thread.currentThread() != getExclusiveOwnerThread())
+                throw new IllegalMonitorStateException();
+            boolean free = false;
+            if (c == 0) {
+                free = true;
+                setExclusiveOwnerThread(null);
+            }
+            setState(c);
+            return free;
+</code></pre><p>主要作用为释放当前线程占用的锁，若当前线程不占有锁了则unlock成功，将ExclusiveOwnerThread置为null<br>随后观察头结点当前的状态，若处于park状态，则调用unpark方法</p>
+<h2 id="Condition"><a href="#Condition" class="headerlink" title="Condition"></a>Condition</h2>
       
     </div>
 
@@ -624,7 +644,7 @@ return Thread.interrupted();
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-count">28</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -691,7 +711,7 @@ return Thread.interrupted();
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源码分析"><span class="nav-number">3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#lock"><span class="nav-number">4.</span> <span class="nav-text">lock</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unlock"><span class="nav-number">5.</span> <span class="nav-text">unlock</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源码分析"><span class="nav-number">3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#lock"><span class="nav-number">4.</span> <span class="nav-text">lock</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#unlock"><span class="nav-number">5.</span> <span class="nav-text">unlock</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition"><span class="nav-number">5.1.</span> <span class="nav-text">Condition</span></a></li></ol></li></ol></div>
             
 
           </div>

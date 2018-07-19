@@ -87,15 +87,18 @@
 
 
 
+<meta name="description" content="多看看底层实现  Test.class class Test {      public synchronized void testMethod(){         System.out.println(&amp;quot;this is method&amp;quot;);     }      public void testBlock(){         synchronized (this){">
 <meta name="keywords" content="日常学习,源码,jdk,synchronized">
 <meta property="og:type" content="article">
 <meta property="og:title" content="synchronized实现原理">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/22/synchronized实现原理/index.html">
 <meta property="og:site_name" content="noob">
+<meta property="og:description" content="多看看底层实现  Test.class class Test {      public synchronized void testMethod(){         System.out.println(&amp;quot;this is method&amp;quot;);     }      public void testBlock(){         synchronized (this){">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-06-22T02:10:53.000Z">
+<meta property="og:updated_time" content="2018-07-19T16:07:43.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized实现原理">
+<meta name="twitter:description" content="多看看底层实现  Test.class class Test {      public synchronized void testMethod(){         System.out.println(&amp;quot;this is method&amp;quot;);     }      public void testBlock(){         synchronized (this){">
 
 
 
@@ -384,8 +387,72 @@
 
       
         <blockquote>
+<p>多看看底层实现</p>
 </blockquote>
+<p>Test.class</p>
+<pre><code>class Test {
 
+    public synchronized void testMethod(){
+        System.out.println(&quot;this is method&quot;);
+    }
+
+    public void testBlock(){
+        synchronized (this){
+            System.out.println(&quot;this is block&quot;);
+        }
+    }
+
+    public static synchronized void testStaticMethod(){
+        System.out.println(&quot;this is static method&quot;);
+    }
+}
+</code></pre><p>用javap -c反编译之后得到的字节码</p>
+<pre><code>Compiled from &quot;Test.java&quot;
+class Test {
+  Test();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+       4: return
+
+  public synchronized void testMethod();
+    Code:
+       0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc           #3                  // String this is method
+       5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return
+
+  public void testBlock();
+    Code:
+       0: aload_0
+       1: dup
+       2: astore_1
+       3: monitorenter
+       4: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+       7: ldc           #5                  // String this is block
+       9: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+      12: aload_1
+      13: monitorexit
+      14: goto          22
+      17: astore_2
+      18: aload_1
+      19: monitorexit
+      20: aload_2
+      21: athrow
+      22: return
+    Exception table:
+       from    to  target type
+           4    14    17   any
+          17    20    17   any
+
+  public static synchronized void testStaticMethod();
+    Code:
+       0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc           #6                  // String this is static method
+       5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return
+}
+</code></pre>
       
     </div>
 

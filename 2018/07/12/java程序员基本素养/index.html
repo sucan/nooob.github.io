@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的 需要了解的知识点 java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础 需要了解的知识点 .clas">
+<meta name="description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的  java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础  .class 文件结构 待填坑 字节码指令">
 <meta name="keywords" content="随想,java程序员基本素养">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java程序员基本素养(一) 从java文件到在JVM中运行">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/07/12/java程序员基本素养/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的 需要了解的知识点 java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础 需要了解的知识点 .clas">
+<meta property="og:description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的  java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础  .class 文件结构 待填坑 字节码指令">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-19T03:19:06.000Z">
+<meta property="og:updated_time" content="2018-07-19T12:16:36.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java程序员基本素养(一) 从java文件到在JVM中运行">
-<meta name="twitter:description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的 需要了解的知识点 java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础 需要了解的知识点 .clas">
+<meta name="twitter:description" content="个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用  .java 文件java 码农生涯的起点是从一个.java文件开始的  java语法 待填坑  .class 文件.java 文件通过javac编译后每个类都会生成一个.class文件.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础  .class 文件结构 待填坑 字节码指令">
 
 
 
@@ -390,24 +390,29 @@
 <p>个人理解的作为一个java程序员应当有的基本素养系列，只维护一个目录作为查缺补漏用</p>
 </blockquote>
 <h1 id="java-文件"><a href="#java-文件" class="headerlink" title=".java 文件"></a>.java 文件</h1><p>java 码农生涯的起点是从一个.java文件开始的</p>
-<h2 id="需要了解的知识点"><a href="#需要了解的知识点" class="headerlink" title="需要了解的知识点"></a>需要了解的知识点</h2><ul>
+<ul>
 <li>java语法 <em><a href="">待填坑</a></em></li>
 </ul>
 <h1 id="class-文件"><a href="#class-文件" class="headerlink" title=".class 文件"></a>.class 文件</h1><p>.java 文件通过javac编译后每个类都会生成一个.class文件<br>.class文件是JVM生态圈里比较重要的一部分，也是java实现跨平台部署的基础</p>
-<h2 id="需要了解的知识点-1"><a href="#需要了解的知识点-1" class="headerlink" title="需要了解的知识点"></a>需要了解的知识点</h2><ul>
+<ul>
 <li>.class 文件结构 <em><a href="">待填坑</a></em></li>
 <li>字节码指令含义 <em><a href="">待填坑</a></em>  <em><a href="https://segmentfault.com/a/1190000008606277" target="_blank" rel="noopener">这个不错</a></em></li>
 <li>java语法如何转换为字节码(不那么重要) <em><a href="">待填坑</a></em></li>
 </ul>
 <h1 id="class-文件加载进内存中"><a href="#class-文件加载进内存中" class="headerlink" title=".class 文件加载进内存中"></a>.class 文件加载进内存中</h1><p>要使用.class文件先得把.class文件加载到内存中</p>
-<h2 id="需要了解的知识点-2"><a href="#需要了解的知识点-2" class="headerlink" title="需要了解的知识点"></a>需要了解的知识点</h2><ul>
+<ul>
 <li>类加载机制 <em><a href="">待填坑</a></em></li>
 </ul>
-<h1 id="内存中的-class文件如何转化为机器码"><a href="#内存中的-class文件如何转化为机器码" class="headerlink" title="内存中的.class文件如何转化为机器码"></a>内存中的.class文件如何转化为机器码</h1><p>字节码还是能让JVM识别，但是正在进行运算的还是机器本身，所以需要把字节码转化为<br>可被机器识别的机器码</p>
-<h2 id="需要了解的知识点-3"><a href="#需要了解的知识点-3" class="headerlink" title="需要了解的知识点"></a>需要了解的知识点</h2><ul>
+<h1 id="内存中的-class文件如何转化为机器码"><a href="#内存中的-class文件如何转化为机器码" class="headerlink" title="内存中的.class文件如何转化为机器码"></a>内存中的.class文件如何转化为机器码</h1><p>字节码还是能被JVM识别，但是正在进行运算的还是机器本身，所以需要把字节码转化为可被机器识别的机器码</p>
+<ul>
 <li>解释器编译器，JIT等 <em><a href="">待填坑</a></em></li>
 </ul>
-<p>#</p>
+<h1 id="GC"><a href="#GC" class="headerlink" title="GC"></a>GC</h1><p>程序运行起来之后，在运行过程中需要不断地申请和释放内存，怎么来分配和回收内存就需要我们关注一下了，我们通常使用的VM都是hotspot VM<br>hotspot VM为我们提供了很多的垃圾收集器</p>
+<ul>
+<li>JVM 内存分配方案(hotSpot) <em><a href="">待填坑</a></em></li>
+<li>JVM 收集器(hotSpot) <em><a href="">待填坑</a></em></li>
+<li>Java 常用调试工具(jsp,jmap,jstack等) <em><a href="">待填坑</a></em></li>
+</ul>
 
       
     </div>
@@ -455,6 +460,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/19/java程序员基本素养2/" rel="prev" title="java程序员基本素养(二) 更复杂的java程序">
+                java程序员基本素养(二) 更复杂的java程序 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -526,7 +535,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-count">30</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -593,7 +602,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#java-文件"><span class="nav-number">1.</span> <span class="nav-text">.java 文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#需要了解的知识点"><span class="nav-number">1.1.</span> <span class="nav-text">需要了解的知识点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#class-文件"><span class="nav-number">2.</span> <span class="nav-text">.class 文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#需要了解的知识点-1"><span class="nav-number">2.1.</span> <span class="nav-text">需要了解的知识点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#class-文件加载进内存中"><span class="nav-number">3.</span> <span class="nav-text">.class 文件加载进内存中</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#需要了解的知识点-2"><span class="nav-number">3.1.</span> <span class="nav-text">需要了解的知识点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存中的-class文件如何转化为机器码"><span class="nav-number">4.</span> <span class="nav-text">内存中的.class文件如何转化为机器码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#需要了解的知识点-3"><span class="nav-number">4.1.</span> <span class="nav-text">需要了解的知识点</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#java-文件"><span class="nav-number">1.</span> <span class="nav-text">.java 文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#class-文件"><span class="nav-number">2.</span> <span class="nav-text">.class 文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#class-文件加载进内存中"><span class="nav-number">3.</span> <span class="nav-text">.class 文件加载进内存中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存中的-class文件如何转化为机器码"><span class="nav-number">4.</span> <span class="nav-text">内存中的.class文件如何转化为机器码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GC"><span class="nav-number">5.</span> <span class="nav-text">GC</span></a></li></ol></div>
             
 
           </div>

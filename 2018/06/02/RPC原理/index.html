@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理">
+<meta name="description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理 个人总结RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有  JDk的动态代理 服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器 客户端和服务端之间的通信协议和报文，通常使用自定义报文">
 <meta name="keywords" content="日常学习,RPC">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RPC原理">
 <meta property="og:url" content="http://blog.kuangenping.com/2018/06/02/RPC原理/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理">
+<meta property="og:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理 个人总结RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有  JDk的动态代理 服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器 客户端和服务端之间的通信协议和报文，通常使用自定义报文">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-22T10:24:33.000Z">
+<meta property="og:updated_time" content="2018-07-22T13:20:58.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RPC原理">
-<meta name="twitter:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理">
+<meta name="twitter:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理 个人总结RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有  JDk的动态代理 服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器 客户端和服务端之间的通信协议和报文，通常使用自定义报文">
 
 
 
@@ -389,6 +389,13 @@
         <p>原理讲解网上一大篇就不复制粘贴了</p>
 <p>贴一篇自己觉得讲得比较清楚的</p>
 <p><em><a href="http://www.cnblogs.com/LBSer/p/4853234.html" target="_blank" rel="noopener">RPC原理</a></em></p>
+<h1 id="个人总结"><a href="#个人总结" class="headerlink" title="个人总结"></a>个人总结</h1><p>RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有</p>
+<ol>
+<li>JDk的动态代理</li>
+<li>服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器</li>
+<li>客户端和服务端之间的通信协议和报文，通常使用自定义报文,tcp协议，网络传输使用Netty通过NIO的方式通信</li>
+<li>序列化方式的选择多种，通常使用hessian序列化</li>
+</ol>
 
       
     </div>
@@ -427,8 +434,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/06/02/hashmap/" rel="next" title="hashmap">
-                <i class="fa fa-chevron-left"></i> hashmap
+              <a href="/2018/06/02/Threadpoolexecutor源码学习/" rel="next" title="Threadpoolexecutor源码学习">
+                <i class="fa fa-chevron-left"></i> Threadpoolexecutor源码学习
               </a>
             
           </div>
@@ -437,8 +444,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/06/02/MQ原理/" rel="prev" title="MQ原理">
-                MQ原理 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/06/02/jvm gc 相关/" rel="prev" title="JVM GC">
+                JVM GC <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -486,8 +493,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/littledog.jpg"
@@ -502,7 +518,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-count">11</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -559,6 +575,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#个人总结"><span class="nav-number">1.</span> <span class="nav-text">个人总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

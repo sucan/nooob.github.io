@@ -87,19 +87,24 @@
 
 
 
-<meta name="description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平有限，因此有什么错误的地方欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：及cpu当前负载，举">
+<meta name="description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
 <meta name="keywords" content="可以叫我菜鸡程序员,但请不要叫我码农">
 <meta property="og:type" content="article">
 <meta property="og:title" content="在点评的学习总结（一） 个人对分布式高并发服务的理解">
-<meta property="og:url" content="http://blog.kuangenping.com/2018/08/14/总结/index.html">
+<meta property="og:url" content="http://blog.kuangenping.com/2018/08/15/总结/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平有限，因此有什么错误的地方欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：及cpu当前负载，举">
+<meta property="og:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://blog.kuangenping.com/images/cpu.jpg">
-<meta property="og:updated_time" content="2018-08-13T16:30:57.000Z">
+<meta property="og:image" content="http://blog.kuangenping.com/images/RPC.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/zebra.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/kafka1.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/kafka2.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/rhino.png">
+<meta property="og:updated_time" content="2018-08-15T15:26:00.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="在点评的学习总结（一） 个人对分布式高并发服务的理解">
-<meta name="twitter:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平有限，因此有什么错误的地方欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：及cpu当前负载，举">
+<meta name="twitter:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
 <meta name="twitter:image" content="http://blog.kuangenping.com/images/cpu.jpg">
 
 
@@ -128,7 +133,7 @@
 
 
 
-  <link rel="canonical" href="http://blog.kuangenping.com/2018/08/14/总结/"/>
+  <link rel="canonical" href="http://blog.kuangenping.com/2018/08/15/总结/"/>
 
 
 
@@ -283,7 +288,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/08/14/总结/">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/08/15/总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sucan">
@@ -319,8 +324,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-14T00:30:57+08:00">
-                2018-08-14
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-15T23:26:00+08:00">
+                2018-08-15
               </time>
             
 
@@ -337,7 +342,7 @@
 
           
           
-             <span id="/2018/08/14/总结/" class="leancloud_visitors" data-flag-title="在点评的学习总结（一） 个人对分布式高并发服务的理解">
+             <span id="/2018/08/15/总结/" class="leancloud_visitors" data-flag-title="在点评的学习总结（一） 个人对分布式高并发服务的理解">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -370,13 +375,14 @@
 <p>在点评待了2年多了，是时候总结一下在点评学到的东西了</p>
 </blockquote>
 <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点</p>
-<p>由于本人水平有限，因此有什么错误的地方欢迎大家指出</p>
+<p>由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出</p>
 <p>一些概念：</p>
 <p><code>多核cpu以及超线程技术</code>：<br><img src="/images/cpu.jpg" alt="cpu"></p>
 <p><code>逻辑cpu核数</code>:</p>
 <p>物理cpu数 * cpu 核数 * 超线程数</p>
-<p><code>cpu的load average</code>：及cpu当前负载，举个栗子，若一个cpu1分钟能够处理的进程数是100，然后在这一分钟内只有20个进程需要被处理，那么当前cpu的负载为20/100 = 0.2</p>
-<p>通常一台机器的load average不应当超过0.7 * 逻辑cpu核数，当超过了就应当去查找原因，要是达到 1.0 * 逻辑cpu核数 那么就必须要想办法降下来</p>
+<p><code>cpu的load average</code>：<br>即cpu当前负载，举个栗子，若一个cpu1分钟能够处理的进程数是100，然后在这一分钟内只有20个进程需要被处理，那么当前cpu的负载为20/100 = 0.2<br>通常一台机器的load average不应当超过0.7 * 逻辑cpu核数，当超过了就应当去查找原因，要是达到 1.0 * 逻辑cpu核数 那么就必须要想办法降下来</p>
+<p><code>QPS(Query Per Second)</code>:<br>即每秒查询率,是对一个特定的查询服务器在规定时间内所处理流量多少的衡量标准</p>
+<p><code>TPS(TransactionPerSecond)</code>:<br>即每秒事务处理量，指每秒钟系统能够处理的交易或事务的数量</p>
 <h1 id="提高单机性能-多线程技术："><a href="#提高单机性能-多线程技术：" class="headerlink" title="提高单机性能-多线程技术："></a>提高单机性能-多线程技术：</h1><h2 id="多线程是否一定能提升效率："><a href="#多线程是否一定能提升效率：" class="headerlink" title="多线程是否一定能提升效率："></a>多线程是否一定能提升效率：</h2><p>首先需要明确一点，多线程只是将一个大的计算任务分为了多个并行的小的计算任务，这些拆分出来的任务还是需要分别去抢占cpu时间片，总体需要花费的时间并没有减少，只是使得任务可以并行执行</p>
 <p>因此多线程能够提升程序执行效率的一个关键点是这台机器上的cpu，如果是单核的话，多线程反而比单线程慢因为增加了上下文切换的开销，同时对于多核cpu来说线程数也不是越多越好，举个例4核8线程的cpu</p>
 <p>能够同时处理的任务也就8个，起再多线程也没用，反而会增加不必要的开销，通常来说保证同时处理的 线程数 = N(CPU核心数) + 1 能使系统效率达到最优，当然这里是指计算密集型线程，如果是io密集型的话可以适当增加线程数因为io线程并不一定会去抢占cpu</p>
@@ -384,8 +390,59 @@
 <h1 id="集群化服务-分布式部署："><a href="#集群化服务-分布式部署：" class="headerlink" title="集群化服务-分布式部署："></a>集群化服务-分布式部署：</h1><p>所谓分布式服务，个人理解就是服务和资源分散部署到不同的机器上<br>使用原因是因为单机部署存在一个机器性能瓶颈，以及单点问题，所以线上所有服务都是多机部署的。<br>当线上的流量变大了之后，以及提供服务的机器多了之后，如何去分发这些流量，以及流量都应该分发到哪台机器上这就是负载均衡解决的问题</p>
 <h2 id="流量转发-负载均衡："><a href="#流量转发-负载均衡：" class="headerlink" title="流量转发-负载均衡："></a>流量转发-负载均衡：</h2><p>负载均衡分为4层负载均衡和7层负载均衡，其中4层负载均衡作用于OSI模型的第四层传输层，这一层主要的协议是tcp和udp，由此可以知道这一层负载均衡的作用主要是对数据包的转发<br>通常客户端的流量过来了之后到达4层负载均衡，然后4层负载均衡通过修改数据包的地址信息将流量转发到应用服务器</p>
 <p>7层负载均衡的话作用于OSI模型的第7层应用层，主要工作为代理，在将应用层的流量完整解析出来之后，7层负载均衡会新建一个连接到实际需要访问的机器上，将解析出的请求投递过去</p>
-<h2 id="公司现状："><a href="#公司现状：" class="headerlink" title="公司现状："></a>公司现状：</h2><p>4层负载均衡使用的自研mgw，7层用的nginx或者Tengine 附上一篇文章 <a href="https://tech.meituan.com/MGW.html" target="_blank" rel="noopener">MGW</a></p>
-<h2 id="RPC"><a href="#RPC" class="headerlink" title="RPC"></a>RPC</h2><h1 id="数据量日益增加-分库分表："><a href="#数据量日益增加-分库分表：" class="headerlink" title="数据量日益增加-分库分表："></a>数据量日益增加-分库分表：</h1><h2 id="使用zebra进行分库分表："><a href="#使用zebra进行分库分表：" class="headerlink" title="使用zebra进行分库分表："></a>使用zebra进行分库分表：</h2><h1 id="读多写少-缓存的使用："><a href="#读多写少-缓存的使用：" class="headerlink" title="读多写少-缓存的使用："></a>读多写少-缓存的使用：</h1><h2 id="redis和tair介绍"><a href="#redis和tair介绍" class="headerlink" title="redis和tair介绍:"></a>redis和tair介绍:</h2><h1 id="不必要流程的异步化-MQ："><a href="#不必要流程的异步化-MQ：" class="headerlink" title="不必要流程的异步化-MQ："></a>不必要流程的异步化-MQ：</h1><h2 id="mafka介绍"><a href="#mafka介绍" class="headerlink" title="mafka介绍:"></a>mafka介绍:</h2><h1 id="提升可用性-限流和熔断降级："><a href="#提升可用性-限流和熔断降级：" class="headerlink" title="提升可用性-限流和熔断降级："></a>提升可用性-限流和熔断降级：</h1><h2 id="rhino介绍："><a href="#rhino介绍：" class="headerlink" title="rhino介绍："></a>rhino介绍：</h2>
+<h2 id="公司现状："><a href="#公司现状：" class="headerlink" title="公司现状："></a>公司现状：</h2><p>4层负载均衡使用的自研mgw，7层(web端)用的nginx或者Tengine，然后实际到service端的时候是使用的rpc服务自带的负载均衡<br>附上一篇文章 <a href="https://tech.meituan.com/MGW.html" target="_blank" rel="noopener">MGW</a></p>
+<h2 id="RPC"><a href="#RPC" class="headerlink" title="RPC"></a>RPC</h2><p>RPC服务主要是为了简化部署在不同机器上的不同服务之间的相互调用<br>不多讲，甩篇文章先 <a href="https://blog.kuangenping.com/2018/06/02/RPC%E5%8E%9F%E7%90%86/">RPC</a><br><img src="/images/RPC.png" alt="RPC"></p>
+<h1 id="数据量日益增加-分库分表："><a href="#数据量日益增加-分库分表：" class="headerlink" title="数据量日益增加-分库分表："></a>数据量日益增加-分库分表：</h1><p>现在线上提供服务的机器已经由一台变成多台了，并且能够水平扩展，因此在某种程度上已经解决了高访问量的问题(其实并没有)加机器就好了嘛，但接下来还是会遇到各种各样的问题<br>首先一个比较容易想到的是当服务在线运行时间比较久或者访问量比较大之后，通常会导致数据库中或者表中的数据量越来越大，当数据量大了之后不论是插入还是查询都会变慢<br>长此以往，直接就会导致我们的服务不可用,并且这种场景下扩几台应用机都没用，那么机智的小伙伴肯定想到了，扩应用机没用，扩DB不就行了么，答案确实是这样的，只不过我们用了一个比较高端的名词–<em>分库分表</em><br>所谓分库分表，其实就是将一个库或者表的数据分散到不同的库，或者不同的表中，然后通过提前定义好的分库规则和分表规则去访问不同库表，降低单库单表访问压力提高读写性能<br>(ps:其实分库分表的前置技术栈还有一个读写分离技术，篇幅有限，就不说了，大致提一句就是单库写，多库读)</p>
+<h2 id="一些关注点"><a href="#一些关注点" class="headerlink" title="一些关注点"></a>一些关注点</h2><h3 id="分库分表的临界值"><a href="#分库分表的临界值" class="headerlink" title="分库分表的临界值"></a>分库分表的临界值</h3><ol>
+<li>单表数量不超过1000万</li>
+<li>单库数据量不超过300G</li>
+</ol>
+<h3 id="分库分表之后会遇到的问题"><a href="#分库分表之后会遇到的问题" class="headerlink" title="分库分表之后会遇到的问题"></a>分库分表之后会遇到的问题</h3><ol>
+<li>基本的数据库增删改功能</li>
+<li>分布式id</li>
+<li>分布式事务</li>
+<li>动态扩容</li>
+</ol>
+<h2 id="使用zebra进行分库分表："><a href="#使用zebra进行分库分表：" class="headerlink" title="使用zebra进行分库分表："></a>使用zebra进行分库分表：</h2><p><img src="/images/zebra.png" alt="zebra"></p>
+<p>最后甩个链接 <a href="https://km.sankuai.com/page/56490972#id-4.5%E5%B8%B8%E8%A7%81%E6%A1%88%E4%BE%8B" target="_blank" rel="noopener">zebra</a></p>
+<h1 id="读多写少-缓存的使用："><a href="#读多写少-缓存的使用：" class="headerlink" title="读多写少-缓存的使用："></a>读多写少-缓存的使用：</h1><p>当把数据量的问题解决了之后，随着业务的发展服务访问量日益增加，你会发现读写分离+分库分表能处理的请求量(这里指qps或Tps，不过通常都是读压力比较大)还是有限，这就是所谓的DB瓶颈<br>针对这种情况一个常用的优化措施就是缓存，利用缓存的高吞吐量的特性，在db前部署一层缓存可以大大降低db的负载，同时通常缓存响应的速度比db快(内存缓存)，因此在提高吞吐量的情况下还提高了访问速度，<br>简直妙啊</p>
+<h2 id="redis和tair介绍"><a href="#redis和tair介绍" class="headerlink" title="redis和tair介绍:"></a>redis和tair介绍:</h2><p>redis 纯内存K-V缓存，支持5种数据结构String、Hash 、List 、 Set 、 ZSet</p>
+<p>tair 淘宝开源 内存结构主要看存储引擎选择，例如MDB，LDB等</p>
+<p>具体可见jiajun大佬的分享: <a href="https://km.sankuai.com/page/51012430" target="_blank" rel="noopener">大佬的分享Redis</a>  <a href="https://km.sankuai.com/page/50508212" target="_blank" rel="noopener">大佬的分享Tair</a></p>
+<h2 id="使用缓存需要注意的问题"><a href="#使用缓存需要注意的问题" class="headerlink" title="使用缓存需要注意的问题"></a>使用缓存需要注意的问题</h2><ol>
+<li>缓存穿透<br>通常在缓存未命中的情况下我们回去db再查一次数据，要是有人使用不存在的key来请求，那么流量就相当于直接落在db上</li>
+</ol>
+<p>解决方案：访问db前进行合理性校验</p>
+<ol start="2">
+<li>缓存击穿<br>单个key在过期的一瞬间被大量请求访问</li>
+</ol>
+<p>解决方案：在访问db前，先加个互斥锁，例如setnx</p>
+<ol start="3">
+<li>缓存雪崩<br>批量key在同一时间过期，大量请求直接到达db，然后db负载飙升，引起雪崩</li>
+</ol>
+<p>解决方案：采用不同的过期时间，例如在固定过期时间的基础上加上一个随机值</p>
+<h1 id="不必要流程的异步化-MQ："><a href="#不必要流程的异步化-MQ：" class="headerlink" title="不必要流程的异步化-MQ："></a>不必要流程的异步化-MQ：</h1><p>那么在原有的系统上加上一层缓存之后就可以高枕无忧了么，答案当然是NO，下面列举一些场景：</p>
+<ol>
+<li>写流量非常高</li>
+</ol>
+<p>缓存通常只被用来解决读性能问题，最终数据一致性还是要靠db来保证(其实就是要把数据刷到磁盘上)，因此不可能将所有的写都放到缓存上</p>
+<ol start="2">
+<li>瞬时流量暴增</li>
+</ol>
+<p>系统流量在短时间内倍增，例如节日或者活动期间，突发流量很有可能将缓存直接压垮，然后系统GG</p>
+<p>针对这些问题，乍一看似乎是没什么好的办法可以解决了(其实有，但是我不知道)，不过针对某些特殊的场景我们还是可以优化一下的<br>比如：</p>
+<ol>
+<li>我如果能减少每个请求的处理时间，那么是不是就能够提高我单机的qps，那么瞬时流量来的时候是不是就不至于压夸整个系统了</li>
+<li>对于写请求的话如果对于响应时间的要求不是那么高，那么先把这些请求都保存下来，然后慢慢处理不就好了</li>
+</ol>
+<p>针对第一种优化方案，我们能想到的一个点是将系统流程中的一些不那么重要的分支流程由同步改为异步，例如更新缓存的操作<br>然后第二种优化方案其实也是一种异步化的思想，将同步的事改为异步去做，只要保证最终一致性就好了。</p>
+<p>那么怎么来实现这种异步化操作呢，这个时候就轮到MQ(MessageQueue)大佬出场了。</p>
+<p>所谓MQ，其实就是一个生产者-消费者模型，producer负责生产消息，然后consumer消费消息，中间还有一个broker用来保存生产的消息<br>像我们刚才说的这些场景我们可以让我们的服务器既作producer又做consumer，将需要异步处理的任务统统先发送到broker,然后慢慢取回来消费<br>当然MQ也并没有我说的这么简单，篇幅有限加上个人能力有限我这里就不细说了，具体可以看看我司大佬的博文 <a href="https://tech.meituan.com/mq_design.html" target="_blank" rel="noopener">这个是大佬文章</a></p>
+<h2 id="kafka介绍"><a href="#kafka介绍" class="headerlink" title="kafka介绍:"></a>kafka介绍:</h2><p>我司使用的MQ是mafka，其实就是封装了一下kafka，针对kafka篇幅有限加上个人能力有限也不细说了，简单介绍一下<br><img src="/images/kafka1.png" alt="kafka1"><br><img src="/images/kafka2.png" alt="kafka2"></p>
+<h1 id="提升可用性-限流和熔断降级："><a href="#提升可用性-限流和熔断降级：" class="headerlink" title="提升可用性-限流和熔断降级："></a>提升可用性-限流和熔断降级：</h1><p>当系统的可用性依赖与其他服务的可用性时，熔断降级机制是提升系统本身可使用性的一大利器<br>同时针对突发流量，限流工具的使用也是相当有必要的</p>
+<h2 id="rhino介绍："><a href="#rhino介绍：" class="headerlink" title="rhino介绍："></a>rhino介绍：</h2><p><a href="https://km.sankuai.com/page/28248534" target="_blank" rel="noopener">Rhino</a></p>
+<p><img src="/images/rhino.png" alt="rhino"></p>
+
       
     </div>
 
@@ -562,7 +619,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#提高单机性能-多线程技术："><span class="nav-number">2.</span> <span class="nav-text">提高单机性能-多线程技术：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#多线程是否一定能提升效率："><span class="nav-number">2.1.</span> <span class="nav-text">多线程是否一定能提升效率：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于线程安全："><span class="nav-number">2.2.</span> <span class="nav-text">关于线程安全：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#集群化服务-分布式部署："><span class="nav-number">3.</span> <span class="nav-text">集群化服务-分布式部署：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#流量转发-负载均衡："><span class="nav-number">3.1.</span> <span class="nav-text">流量转发-负载均衡：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#公司现状："><span class="nav-number">3.2.</span> <span class="nav-text">公司现状：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RPC"><span class="nav-number">3.3.</span> <span class="nav-text">RPC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据量日益增加-分库分表："><span class="nav-number">4.</span> <span class="nav-text">数据量日益增加-分库分表：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用zebra进行分库分表："><span class="nav-number">4.1.</span> <span class="nav-text">使用zebra进行分库分表：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#读多写少-缓存的使用："><span class="nav-number">5.</span> <span class="nav-text">读多写少-缓存的使用：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#redis和tair介绍"><span class="nav-number">5.1.</span> <span class="nav-text">redis和tair介绍:</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#不必要流程的异步化-MQ："><span class="nav-number">6.</span> <span class="nav-text">不必要流程的异步化-MQ：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#mafka介绍"><span class="nav-number">6.1.</span> <span class="nav-text">mafka介绍:</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#提升可用性-限流和熔断降级："><span class="nav-number">7.</span> <span class="nav-text">提升可用性-限流和熔断降级：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#rhino介绍："><span class="nav-number">7.1.</span> <span class="nav-text">rhino介绍：</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#提高单机性能-多线程技术："><span class="nav-number">2.</span> <span class="nav-text">提高单机性能-多线程技术：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#多线程是否一定能提升效率："><span class="nav-number">2.1.</span> <span class="nav-text">多线程是否一定能提升效率：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于线程安全："><span class="nav-number">2.2.</span> <span class="nav-text">关于线程安全：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#集群化服务-分布式部署："><span class="nav-number">3.</span> <span class="nav-text">集群化服务-分布式部署：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#流量转发-负载均衡："><span class="nav-number">3.1.</span> <span class="nav-text">流量转发-负载均衡：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#公司现状："><span class="nav-number">3.2.</span> <span class="nav-text">公司现状：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RPC"><span class="nav-number">3.3.</span> <span class="nav-text">RPC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据量日益增加-分库分表："><span class="nav-number">4.</span> <span class="nav-text">数据量日益增加-分库分表：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一些关注点"><span class="nav-number">4.1.</span> <span class="nav-text">一些关注点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分库分表的临界值"><span class="nav-number">4.1.1.</span> <span class="nav-text">分库分表的临界值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分库分表之后会遇到的问题"><span class="nav-number">4.1.2.</span> <span class="nav-text">分库分表之后会遇到的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用zebra进行分库分表："><span class="nav-number">4.2.</span> <span class="nav-text">使用zebra进行分库分表：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#读多写少-缓存的使用："><span class="nav-number">5.</span> <span class="nav-text">读多写少-缓存的使用：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#redis和tair介绍"><span class="nav-number">5.1.</span> <span class="nav-text">redis和tair介绍:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用缓存需要注意的问题"><span class="nav-number">5.2.</span> <span class="nav-text">使用缓存需要注意的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#不必要流程的异步化-MQ："><span class="nav-number">6.</span> <span class="nav-text">不必要流程的异步化-MQ：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka介绍"><span class="nav-number">6.1.</span> <span class="nav-text">kafka介绍:</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#提升可用性-限流和熔断降级："><span class="nav-number">7.</span> <span class="nav-text">提升可用性-限流和熔断降级：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#rhino介绍："><span class="nav-number">7.1.</span> <span class="nav-text">rhino介绍：</span></a></li></ol></li></ol></div>
             
 
           </div>

@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="noob">
 <meta property="og:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理 个人总结RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有  JDk的动态代理 服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器 客户端和服务端之间的通信协议和报文，通常使用自定义报文">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-22T13:20:58.000Z">
+<meta property="og:updated_time" content="2018-08-15T05:13:06.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RPC原理">
 <meta name="twitter:description" content="原理讲解网上一大篇就不复制粘贴了 贴一篇自己觉得讲得比较清楚的 RPC原理 个人总结RPC是为了简化部署在不同机器上的不同服务之间的相互调用，使用生成动态代理类的方式，使得调用远程服务和调用本地服务并无区别，其中比较重要的点有  JDk的动态代理 服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器 客户端和服务端之间的通信协议和报文，通常使用自定义报文">
@@ -394,7 +394,7 @@
 <li>JDk的动态代理</li>
 <li>服务的发布和服务不可用时下线，以及客户端如何查找可用服务等,通常使用zk实现，一个节点为一台机器</li>
 <li>客户端和服务端之间的通信协议和报文，通常使用自定义报文,tcp协议，网络传输使用Netty通过NIO的方式通信</li>
-<li>序列化方式的选择多种，通常使用hessian序列化</li>
+<li>序列化方式的选择多种，我司默认使用hessian序列化</li>
 </ol>
 
       

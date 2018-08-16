@@ -87,13 +87,13 @@
 
 
 
-<meta name="description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
+<meta name="description" content="总结一下  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：即cpu当前负载，举个栗子，若一个cpu1分">
 <meta name="keywords" content="可以叫我菜鸡程序员,但请不要叫我码农">
 <meta property="og:type" content="article">
-<meta property="og:title" content="在点评的学习总结（一） 个人对分布式高并发服务的理解">
-<meta property="og:url" content="http://blog.kuangenping.com/2018/08/15/总结/index.html">
+<meta property="og:title" content="个人对高并发服务的理解">
+<meta property="og:url" content="http://blog.kuangenping.com/2018/08/16/总结/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
+<meta property="og:description" content="总结一下  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：即cpu当前负载，举个栗子，若一个cpu1分">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://blog.kuangenping.com/images/cpu.jpg">
 <meta property="og:image" content="http://blog.kuangenping.com/images/RPC.png">
@@ -101,10 +101,10 @@
 <meta property="og:image" content="http://blog.kuangenping.com/images/kafka1.png">
 <meta property="og:image" content="http://blog.kuangenping.com/images/kafka2.png">
 <meta property="og:image" content="http://blog.kuangenping.com/images/rhino.png">
-<meta property="og:updated_time" content="2018-08-15T15:29:00.000Z">
+<meta property="og:updated_time" content="2018-08-16T01:55:02.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="在点评的学习总结（一） 个人对分布式高并发服务的理解">
-<meta name="twitter:description" content="在点评待了2年多了，是时候总结一下在点评学到的东西了  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：">
+<meta name="twitter:title" content="个人对高并发服务的理解">
+<meta name="twitter:description" content="总结一下  前言本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点 由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出 一些概念： 多核cpu以及超线程技术： 逻辑cpu核数: 物理cpu数 * cpu 核数 * 超线程数 cpu的load average：即cpu当前负载，举个栗子，若一个cpu1分">
 <meta name="twitter:image" content="http://blog.kuangenping.com/images/cpu.jpg">
 
 
@@ -133,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://blog.kuangenping.com/2018/08/15/总结/"/>
+  <link rel="canonical" href="http://blog.kuangenping.com/2018/08/16/总结/"/>
 
 
 
 
 
-  <title> 在点评的学习总结（一） 个人对分布式高并发服务的理解 | noob </title>
+  <title> 个人对高并发服务的理解 | noob </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -288,7 +288,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/08/15/总结/">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/08/16/总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sucan">
@@ -309,7 +309,7 @@
             
             
               
-                在点评的学习总结（一） 个人对分布式高并发服务的理解
+                个人对高并发服务的理解
               
             
           </h1>
@@ -324,8 +324,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-15T23:29:00+08:00">
-                2018-08-15
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-16T09:55:02+08:00">
+                2018-08-16
               </time>
             
 
@@ -342,7 +342,7 @@
 
           
           
-             <span id="/2018/08/15/总结/" class="leancloud_visitors" data-flag-title="在点评的学习总结（一） 个人对分布式高并发服务的理解">
+             <span id="/2018/08/16/总结/" class="leancloud_visitors" data-flag-title="个人对高并发服务的理解">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -372,7 +372,7 @@
 
       
         <blockquote>
-<p>在点评待了2年多了，是时候总结一下在点评学到的东西了</p>
+<p>总结一下</p>
 </blockquote>
 <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本文主要是简单介绍一下一个服务由单机部署到分布式部署，访问流量从低到高，这个过程中，我们所使用到的相关技术，以及需要主要到的点</p>
 <p>由于本人水平极其有限，因此有什么错误的地方(感觉会有很多)欢迎大家指出</p>

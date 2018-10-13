@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="noob">
 <meta property="og:description" content="多看看底层实现  Test.class class Test {      public synchronized void testMethod(){         System.out.println(&amp;quot;this is method&amp;quot;);     }      public void testBlock(){         synchronized (this){">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-20T06:56:09.000Z">
+<meta property="og:updated_time" content="2018-08-17T07:18:44.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized实现原理">
 <meta name="twitter:description" content="多看看底层实现  Test.class class Test {      public synchronized void testMethod(){         System.out.println(&amp;quot;this is method&amp;quot;);     }      public void testBlock(){         synchronized (this){">
@@ -406,51 +406,155 @@
         System.out.println(&quot;this is static method&quot;);
     }
 }
-</code></pre><p>用javap -c反编译之后得到的字节码</p>
-<pre><code>Compiled from &quot;Test.java&quot;
-class Test {
+</code></pre><p>用javap -v反编译之后得到的字节码</p>
+<pre><code>class Test
+  minor version: 0
+  major version: 51
+  flags: ACC_SUPER
+Constant pool:
+   #1 = Methodref          #10.#30        // java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+   #2 = Fieldref           #31.#32        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = String             #33            // this is method
+   #4 = Methodref          #34.#35        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #5 = String             #36            // this is block
+   #6 = String             #37            // this is static method
+   #7 = String             #38            // adasdad
+   #8 = Fieldref           #9.#39         // Test.xx:Ljava/lang/String;
+   #9 = Class              #40            // Test
+  #10 = Class              #41            // java/lang/Object
+  #11 = Utf8               xx
+  #12 = Utf8               Ljava/lang/String;
+  #13 = Utf8               &lt;init&gt;
+  #14 = Utf8               ()V
+  #15 = Utf8               Code
+  #16 = Utf8               LineNumberTable
+  #17 = Utf8               LocalVariableTable
+  #18 = Utf8               this
+  #19 = Utf8               LTest;
+  #20 = Utf8               testMethod
+  #21 = Utf8               testBlock
+  #22 = Utf8               StackMapTable
+  #23 = Class              #40            // Test
+  #24 = Class              #41            // java/lang/Object
+  #25 = Class              #42            // java/lang/Throwable
+  #26 = Utf8               testStaticMethod
+  #27 = Utf8               &lt;clinit&gt;
+  #28 = Utf8               SourceFile
+  #29 = Utf8               Test.java
+  #30 = NameAndType        #13:#14        // &quot;&lt;init&gt;&quot;:()V
+  #31 = Class              #43            // java/lang/System
+  #32 = NameAndType        #44:#45        // out:Ljava/io/PrintStream;
+  #33 = Utf8               this is method
+  #34 = Class              #46            // java/io/PrintStream
+  #35 = NameAndType        #47:#48        // println:(Ljava/lang/String;)V
+  #36 = Utf8               this is block
+  #37 = Utf8               this is static method
+  #38 = Utf8               adasdad
+  #39 = NameAndType        #11:#12        // xx:Ljava/lang/String;
+  #40 = Utf8               Test
+  #41 = Utf8               java/lang/Object
+  #42 = Utf8               java/lang/Throwable
+  #43 = Utf8               java/lang/System
+  #44 = Utf8               out
+  #45 = Utf8               Ljava/io/PrintStream;
+  #46 = Utf8               java/io/PrintStream
+  #47 = Utf8               println
+  #48 = Utf8               (Ljava/lang/String;)V
+{
   Test();
+    descriptor: ()V
+    flags:
     Code:
-       0: aload_0
-       1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V
-       4: return
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+         4: return
+      LineNumberTable:
+        line 3: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   LTest;
 
   public synchronized void testMethod();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_SYNCHRONIZED
     Code:
-       0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
-       3: ldc           #3                  // String this is method
-       5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-       8: return
+      stack=2, locals=1, args_size=1
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #3                  // String this is method
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 7: 0
+        line 8: 8
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       9     0  this   LTest;
 
   public void testBlock();
+    descriptor: ()V
+    flags: ACC_PUBLIC
     Code:
-       0: aload_0
-       1: dup
-       2: astore_1
-       3: monitorenter
-       4: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
-       7: ldc           #5                  // String this is block
-       9: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-      12: aload_1
-      13: monitorexit
-      14: goto          22
-      17: astore_2
-      18: aload_1
-      19: monitorexit
-      20: aload_2
-      21: athrow
-      22: return
-    Exception table:
-       from    to  target type
-           4    14    17   any
-          17    20    17   any
+      stack=2, locals=3, args_size=1
+         0: aload_0
+         1: dup
+         2: astore_1
+         3: monitorenter
+         4: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         7: ldc           #5                  // String this is block
+         9: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        12: aload_1
+        13: monitorexit
+        14: goto          22
+        17: astore_2
+        18: aload_1
+        19: monitorexit
+        20: aload_2
+        21: athrow
+        22: return
+      Exception table:
+         from    to  target type
+             4    14    17   any
+            17    20    17   any
+      LineNumberTable:
+        line 11: 0
+        line 12: 4
+        line 13: 12
+        line 14: 22
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      23     0  this   LTest;
+      StackMapTable: number_of_entries = 2
+        frame_type = 255 /* full_frame */
+          offset_delta = 17
+          locals = [ class Test, class java/lang/Object ]
+          stack = [ class java/lang/Throwable ]
+        frame_type = 250 /* chop */
+          offset_delta = 4
 
   public static synchronized void testStaticMethod();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_STATIC, ACC_SYNCHRONIZED
     Code:
-       0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
-       3: ldc           #6                  // String this is static method
-       5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-       8: return
+      stack=2, locals=0, args_size=0
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #6                  // String this is static method
+         5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 17: 0
+        line 18: 8
+
+  static {};
+    descriptor: ()V
+    flags: ACC_STATIC
+    Code:
+      stack=1, locals=0, args_size=0
+         0: ldc           #7                  // String adasdad
+         2: putstatic     #8                  // Field xx:Ljava/lang/String;
+         5: return
+      LineNumberTable:
+        line 5: 0
 }
 </code></pre><p>从字节码上看不出</p>
 
@@ -570,7 +674,7 @@ class Test {
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">31</span>
+                <span class="site-state-item-count">32</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

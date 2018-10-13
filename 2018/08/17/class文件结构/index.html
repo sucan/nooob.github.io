@@ -1,0 +1,1039 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="日常学习,源码,jdk," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="class 文件是java实现一次编译多处执行的基础，所以理解class文件还是很有必要的  结构图其中u2，u4分别表示2个字节和4个字节 代码分析先写一个简单的java类 KepTest.java public class KepTest {     private static final String a = &amp;quot;static final string&amp;quot;;     pr">
+<meta name="keywords" content="日常学习,源码,jdk">
+<meta property="og:type" content="article">
+<meta property="og:title" content="class文件结构">
+<meta property="og:url" content="http://blog.kuangenping.com/2018/08/17/class文件结构/index.html">
+<meta property="og:site_name" content="noob">
+<meta property="og:description" content="class 文件是java实现一次编译多处执行的基础，所以理解class文件还是很有必要的  结构图其中u2，u4分别表示2个字节和4个字节 代码分析先写一个简单的java类 KepTest.java public class KepTest {     private static final String a = &amp;quot;static final string&amp;quot;;     pr">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://blog.kuangenping.com/images/class.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/KepTestCLass.png">
+<meta property="og:updated_time" content="2018-08-31T09:59:20.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="class文件结构">
+<meta name="twitter:description" content="class 文件是java实现一次编译多处执行的基础，所以理解class文件还是很有必要的  结构图其中u2，u4分别表示2个字节和4个字节 代码分析先写一个简单的java类 KepTest.java public class KepTest {     private static final String a = &amp;quot;static final string&amp;quot;;     pr">
+<meta name="twitter:image" content="http://blog.kuangenping.com/images/class.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://blog.kuangenping.com/2018/08/17/class文件结构/"/>
+
+
+
+
+
+  <title> class文件结构 | noob </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?a4a0e3078844e326de08dc016ad5e2bd";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">noob</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">可以叫我菜鸡程序员,但请不要叫我码农</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2018/08/17/class文件结构/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sucan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/littledog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="noob">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                class文件结构
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-17T15:20:52+08:00">
+                2018-08-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/JDK/" itemprop="url" rel="index">
+                    <span itemprop="name">JDK</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/08/17/class文件结构/" class="leancloud_visitors" data-flag-title="class文件结构">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>class 文件是java实现一次编译多处执行的基础，所以理解class文件还是很有必要的</p>
+</blockquote>
+<h1 id="结构图"><a href="#结构图" class="headerlink" title="结构图"></a>结构图</h1><p><img src="/images/class.png" alt="Class文件"><br>其中u2，u4分别表示2个字节和4个字节</p>
+<h1 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h1><p>先写一个简单的java类</p>
+<p>KepTest.java</p>
+<pre><code>public class KepTest {
+    private static final String a = &quot;static final string&quot;;
+    private static String b = &quot;static string&quot;;
+    private final String c = &quot;final string&quot;;
+    private String d = &quot;normal string&quot;;
+
+    public static void main(String[] args){
+        System.out.println(&quot;Hello word&quot;);
+    }
+
+    public void test(){
+        int i = 1;
+        i = i + 1;
+        System.out.println(i);
+    }
+}
+</code></pre><p>KepTest.class</p>
+<p>用javac对KepTest.java进行编译之后得到KepTest.class文件，我们随便用个文本编辑器将KepTest.class打开</p>
+<p><img src="/images/KepTestCLass.png" alt="KepTest.class"><br>因为class文件本质是以字节为单位的二进制流，这里打开的方式是按8位16进制展示，然后数据存放位置是严格按照上面结构图中的顺序来存储的，所以接下来我们就按照顺序来依次分析一波</p>
+<p>在分析二进制文件前先执行javap -v 之后得到class文件的详细信息，用于辅助我们对class文件进行分析，如下：</p>
+<pre><code>Compiled from &quot;KepTest.java&quot;
+public class KepTest
+  minor version: 0
+  major version: 51
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #13.#38        // java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+   #2 = String             #39            // final string
+   #3 = Fieldref           #12.#40        // KepTest.c:Ljava/lang/String;
+   #4 = String             #41            // normal string
+   #5 = Fieldref           #12.#42        // KepTest.d:Ljava/lang/String;
+   #6 = Fieldref           #43.#44        // java/lang/System.out:Ljava/io/PrintStream;
+   #7 = String             #45            // Hello word
+   #8 = Methodref          #46.#47        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #9 = Methodref          #46.#48        // java/io/PrintStream.println:(I)V
+  #10 = String             #49            // static string
+  #11 = Fieldref           #12.#50        // KepTest.b:Ljava/lang/String;
+  #12 = Class              #51            // KepTest
+  #13 = Class              #52            // java/lang/Object
+  #14 = Utf8               a
+  #15 = Utf8               Ljava/lang/String;
+  #16 = Utf8               ConstantValue
+  #17 = String             #53            // static final string
+  #18 = Utf8               b
+  #19 = Utf8               c
+  #20 = Utf8               d
+  #21 = Utf8               &lt;init&gt;
+  #22 = Utf8               ()V
+  #23 = Utf8               Code
+  #24 = Utf8               LineNumberTable
+  #25 = Utf8               LocalVariableTable
+  #26 = Utf8               this
+  #27 = Utf8               LKepTest;
+  #28 = Utf8               main
+  #29 = Utf8               ([Ljava/lang/String;)V
+  #30 = Utf8               args
+  #31 = Utf8               [Ljava/lang/String;
+  #32 = Utf8               test
+  #33 = Utf8               i
+  #34 = Utf8               I
+  #35 = Utf8               &lt;clinit&gt;
+  #36 = Utf8               SourceFile
+  #37 = Utf8               KepTest.java
+  #38 = NameAndType        #21:#22        // &quot;&lt;init&gt;&quot;:()V
+  #39 = Utf8               final string
+  #40 = NameAndType        #19:#15        // c:Ljava/lang/String;
+  #41 = Utf8               normal string
+  #42 = NameAndType        #20:#15        // d:Ljava/lang/String;
+  #43 = Class              #54            // java/lang/System
+  #44 = NameAndType        #55:#56        // out:Ljava/io/PrintStream;
+  #45 = Utf8               Hello word
+  #46 = Class              #57            // java/io/PrintStream
+  #47 = NameAndType        #58:#59        // println:(Ljava/lang/String;)V
+  #48 = NameAndType        #58:#60        // println:(I)V
+  #49 = Utf8               static string
+  #50 = NameAndType        #18:#15        // b:Ljava/lang/String;
+  #51 = Utf8               KepTest
+  #52 = Utf8               java/lang/Object
+  #53 = Utf8               static final string
+  #54 = Utf8               java/lang/System
+  #55 = Utf8               out
+  #56 = Utf8               Ljava/io/PrintStream;
+  #57 = Utf8               java/io/PrintStream
+  #58 = Utf8               println
+  #59 = Utf8               (Ljava/lang/String;)V
+  #60 = Utf8               (I)V
+{
+  public KepTest();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+         4: aload_0
+         5: ldc           #2                  // String final string
+         7: putfield      #3                  // Field c:Ljava/lang/String;
+        10: aload_0
+        11: ldc           #4                  // String normal string
+        13: putfield      #5                  // Field d:Ljava/lang/String;
+        16: return
+      LineNumberTable:
+        line 1: 0
+        line 4: 4
+        line 5: 10
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      17     0  this   LKepTest;
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #7                  // String Hello word
+         5: invokevirtual #8                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      LineNumberTable:
+        line 8: 0
+        line 9: 8
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       9     0  args   [Ljava/lang/String;
+
+  public void test();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=2, args_size=1
+         0: iconst_1
+         1: istore_1
+         2: iload_1
+         3: iconst_1
+         4: iadd
+         5: istore_1
+         6: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         9: iload_1
+        10: invokevirtual #9                  // Method java/io/PrintStream.println:(I)V
+        13: return
+      LineNumberTable:
+        line 12: 0
+        line 13: 2
+        line 14: 6
+        line 15: 13
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      14     0  this   LKepTest;
+            2      12     1     i   I
+
+  static {};
+    descriptor: ()V
+    flags: ACC_STATIC
+    Code:
+      stack=1, locals=0, args_size=0
+         0: ldc           #10                 // String static string
+         2: putstatic     #11                 // Field b:Ljava/lang/String;
+         5: return
+      LineNumberTable:
+        line 3: 0
+}
+</code></pre><h1 id="开始分析"><a href="#开始分析" class="headerlink" title="开始分析"></a>开始分析</h1><h1 id="magic-魔数"><a href="#magic-魔数" class="headerlink" title="magic 魔数"></a>magic 魔数</h1><p>class文件开头的4个字节被称之为”magic number”,唯一的作用为区分文件类型，表明这是一个能被jvm识别的class文件<br>由上面的图可以看到，这个魔数的值为0XCAFEBABE。</p>
+<h1 id="minor-version-次版本号-amp-major-version-主版本号"><a href="#minor-version-次版本号-amp-major-version-主版本号" class="headerlink" title="minor_version 次版本号 &amp; major_version 主版本号"></a>minor_version 次版本号 &amp; major_version 主版本号</h1><p>紧跟魔数之后的4个字节分别是2个字节的次版本号和2个字节的主版本号，版本号的作用是判断这个class文件能够被哪个版本的JDK执行，向下兼容<br>java的初始版本是45，JDK版本每做一次大版本升级，版本号就加一，比如JDK1.7能处理的class文件的版本号为小于 45+6 = 51的所有版本<br>同时由我们上面的图可以看到，主版本号是0X0033 换算成10进制就是51，说明这个class文件是由1.7版本的jdk编译的。</p>
+<h1 id="constant-pool-count-常量池大小"><a href="#constant-pool-count-常量池大小" class="headerlink" title="constant_pool_count 常量池大小"></a>constant_pool_count 常量池大小</h1><p>版本号之后是常量池，常量池前先使用了2个字节来存储常量池的大小，我们这里的常量池大小为0X003d,转成十进制为61，但是由于常量池大小计数是由1开始的，因此常量池大小为60</p>
+<h1 id="常量池"><a href="#常量池" class="headerlink" title="常量池"></a>常量池</h1><blockquote>
+<p>常量池中主要存放两大类常量：字面量和符号引用<br>字面量：文本字符串、final常量等<br>符号引用:</p>
+<ol>
+<li>类和接口的全限定名</li>
+<li>字段的名称和描述符</li>
+<li>方法的名称和描述符<br>摘自《深入理解java虚拟机》</li>
+</ol>
+</blockquote>
+<p>常量池中的每一个常量都是一张表或者说是一个结构体,不同类型的数据结构也不同,但是相同的一点是所有常量的第一位都是一个字节(u1)的标志位(tag),用来表明当前常量的类型。<br>例如我们这里的第一个常量,开头第一位为<em>0x0a</em> ,换算为十进制之后为<em>10</em> 对应的类型为<code>CONSTANT_Methodref_info</code>,相应的结构为:</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/日常学习/" rel="tag"># 日常学习</a>
+          
+            <a href="/tags/源码/" rel="tag"># 源码</a>
+          
+            <a href="/tags/jdk/" rel="tag"># jdk</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/16/总结/" rel="next" title="个人对高并发服务的理解">
+                <i class="fa fa-chevron-left"></i> 个人对高并发服务的理解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/littledog.jpg"
+               alt="sucan" />
+          <p class="site-author-name" itemprop="name">sucan</p>
+           
+              <p class="site-description motion-element" itemprop="description">可以叫我菜鸡程序员,但请不要叫我码农</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">32</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">36</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-block">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              Links
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.heshengbang.tech" title="fufu" target="_blank">fufu</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#结构图"><span class="nav-number">1.</span> <span class="nav-text">结构图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码分析"><span class="nav-number">2.</span> <span class="nav-text">代码分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#开始分析"><span class="nav-number">3.</span> <span class="nav-text">开始分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#magic-魔数"><span class="nav-number">4.</span> <span class="nav-text">magic 魔数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#minor-version-次版本号-amp-major-version-主版本号"><span class="nav-number">5.</span> <span class="nav-text">minor_version 次版本号 &amp; major_version 主版本号</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#constant-pool-count-常量池大小"><span class="nav-number">6.</span> <span class="nav-text">constant_pool_count 常量池大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常量池"><span class="nav-number">7.</span> <span class="nav-text">常量池</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sucan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+  
+  
+
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("ImkSh1jOKQgp4jyiXL0oUxkz-gzGzoHsz", "1BLaPwDOrMXid2kOtKUxdDID");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+
+  
+
+</body>
+</html>

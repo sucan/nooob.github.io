@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="Java基础篇 IO系列之File类、字节流、字符流 本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释">
+<meta name="description" content="本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下：  An abstract represent">
 <meta name="keywords" content="File类,IO">
 <meta property="og:type" content="article">
-<meta property="og:title" content="File类">
+<meta property="og:title" content="Java基础篇 IO系列之File类">
 <meta property="og:url" content="http://blog.kuangenping.com/2019/11/09/File类/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="Java基础篇 IO系列之File类、字节流、字符流 本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释">
+<meta property="og:description" content="本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下：  An abstract represent">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-11-09T09:13:00.678Z">
+<meta property="og:updated_time" content="2019-11-09T09:28:46.629Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="File类">
-<meta name="twitter:description" content="Java基础篇 IO系列之File类、字节流、字符流 本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释">
+<meta name="twitter:title" content="Java基础篇 IO系列之File类">
+<meta name="twitter:description" content="本文讨论的JDK版本为1.8.0_181，系统环境为macos  FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下：  An abstract represent">
 
 
 
@@ -126,7 +126,7 @@
 
 
 
-  <title>File类 | noob</title>
+  <title>Java基础篇 IO系列之File类 | noob</title>
   
 
 
@@ -314,7 +314,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">File类</h1>
+          <h1 class="post-title" itemprop="name headline">Java基础篇 IO系列之File类</h1>
         
 
         <div class="post-meta">
@@ -376,7 +376,7 @@
 
           
           
-             <span id="/2019/11/09/File类/" class="leancloud_visitors" data-flag-title="File类">
+             <span id="/2019/11/09/File类/" class="leancloud_visitors" data-flag-title="Java基础篇 IO系列之File类">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -438,7 +438,7 @@
       
 
       
-        <h1 id="Java基础篇-IO系列之File类、字节流、字符流"><a href="#Java基础篇-IO系列之File类、字节流、字符流" class="headerlink" title="Java基础篇 IO系列之File类、字节流、字符流"></a>Java基础篇 IO系列之File类、字节流、字符流</h1><blockquote>
+        <blockquote>
 <p>本文讨论的JDK版本为1.8.0_181，系统环境为macos</p>
 </blockquote>
 <h2 id="File"><a href="#File" class="headerlink" title="File"></a>File</h2><p><code>File</code> 类的全限定名为 <code>java.io.File</code>,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下：</p>
@@ -677,7 +677,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java基础篇-IO系列之File类、字节流、字符流"><span class="nav-number">1.</span> <span class="nav-text">Java基础篇 IO系列之File类、字节流、字符流</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#File"><span class="nav-number">1.1.</span> <span class="nav-text">File</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#常用方法分析"><span class="nav-number">1.1.1.</span> <span class="nav-text">常用方法分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#作为文件"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">作为文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#创建"><span class="nav-number">1.1.1.1.1.</span> <span class="nav-text">创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#读写"><span class="nav-number">1.1.1.1.2.</span> <span class="nav-text">读写</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#作为目录"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">作为目录</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#创建-1"><span class="nav-number">1.1.1.2.1.</span> <span class="nav-text">创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#遍历目录"><span class="nav-number">1.1.1.2.2.</span> <span class="nav-text">遍历目录</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#公有方法"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">公有方法</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#File"><span class="nav-number">1.</span> <span class="nav-text">File</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#常用方法分析"><span class="nav-number">1.1.</span> <span class="nav-text">常用方法分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#作为文件"><span class="nav-number">1.1.1.</span> <span class="nav-text">作为文件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#创建"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#读写"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">读写</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#作为目录"><span class="nav-number">1.1.2.</span> <span class="nav-text">作为目录</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#创建-1"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#遍历目录"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">遍历目录</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#公有方法"><span class="nav-number">1.1.3.</span> <span class="nav-text">公有方法</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>

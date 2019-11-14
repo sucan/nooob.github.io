@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[杂谈之什么是FullGC]]></title>
+    <url>%2F2019%2F11%2F14%2Ffullgc%2F</url>
+    <content type="text"><![CDATA[本文基于JDK 1.8，使用的收集器为ParNew + CMS 前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bug暂且不表，有一个很奇怪的现象引起了我的注意，那就是从监控系统上来看，这个应用平均一分钟full gc次数高达十多次，按照我之前的理解full gc时是会stop the world的，stop the world的频率这么高，那么应用自身的服务已经跪掉了啊，但是看这个应用的业务指标监控，居然一切正常，这就有点超出我的理解能力了，后面为了解决这个疑问，针对什么是full gc，以及如何查看full gc的次数等查阅了很多资料，总算搞懂了full gc这个概念，在查资料的过程中发现中文社区里面包含太多错误的信息了，而且大多都是抄来抄去的，非常误导人，因此打算写一篇文章，对一些错误观点进行纠正。 正文前置知识点在真正开始探索Full GC之前，我们需要先介绍几个概念 GCGC 全称为garbage collection,中文含义为垃圾回收，在jvm中的含义为回收无用内存空间 Young space中文名为年轻代或者新生代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较短的对象 Tenured space中文名为老年代或年老代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较长的对象 Minor GCminor gc指的是发生在年轻代或者说新生代（Young space）中的gc，也有人称其为young gc或者ygc,在下文中我们统一使用minor gc表示 Major GCmajor gc指的是发生在老年代（Tenured space）中的gc，也有人称为old gc,o gc,cms gc等，在下文我们统一使用major gc表示 stop the world指的是用户线程在运行至安全点（safe point）或安全区域（safe region）之后，就自行挂起，进入暂停状态，对外的表现看起来就像是全世界都停止运转了一样,而不论何种gc算法，不论是minor gc还是major gc都会stop the world，区别只在于stop the world的时间长短。 什么是Full GC先说一下结论，Full GC这个概念是没有官方定义的，而且含义还特别混乱，在不同地方表达的含义是不同的，需要就不同的场景分别进行讨论。 大众认知上在通常意义上人们口中说的Full GC为一次特殊GC行为的描述，这次GC会回收整个堆的内存，包含老年代，新生代，metaspace等，这个是最常见的一种认知，很多人也就了解到这个程度，因此在遇到一些特殊场景的时候就会发现实际情况和自己的认知会发生冲突 从GC日志上在gc.log中会发现在部分gc日志头中也有Full GC这样的字眼，这里表示的含义是在这次GC的全过程中，都是Stop The world的状态，也就是说在这次GC的全过程中所有用户线程都是处于暂停的状态，那么在这里要喷一下中文jvm神书《深入理解JVM》了，在第二版第89页有这么一段话： GC 日志开头的“[GC”和“[Full GC”说明了这次垃圾收集的停顿类型，而不是用来区分新生代GC还是老年代GC的。如果有“Full”，说明这次GC是发生了Stop-The-World的，例如下面这段新生代收集器ParNew的日志也会出现“[Full GC”（这一般是因为出现了分配 担保失败之类的问题 .所以才导致STW)。如果是调用System.gc()方法所触发的收集，那么在这里将显示“[Full GC (System)”。 这段话的描述是错误的，因为在前面说过，不论何种gc算法，不论新生代或是老年代，其gc都会发生stop the world，这里正确的描述是这次GC的全过程都是Stop-The-World的 从JDK自带的工具上使用jstat -gc命令能够查看到制定java 线程的gc次数，那么在经过我的多次尝试以及对比之后，我发现了使用jstat 查出来的FGC 次数和时间，实际上指的是老年代的收集器发生Stop the world 的次数和持续时间，对应本文而言，就是CMS收集器的Stop the world次数和时间 其他含义（坑爹版）前面不是说到我在监控大盘上看到这个应用平均一分钟发生了十多次”Full GC”么，在我弄明白了前面两个Full GC的含义之后查看了gc.log文件，随后发现该应用实际上一次Full GC都没有出现，然后咨询了一下提供监控数据的同学，结果他说是通过JMX获取的，代码为： ManagementFactory.getGarbageCollectorMXBeans() 然后众所周知，使用MXBean获取到的只是收集器的执行次数，和Full GC半毛钱关系都没有啊，随后在追问了一下，发现做监控系统的同学直接把CMS收集器的收集次数当做了Full GC的次数来统计，what the fuck？？？？，只能说对于FUll GC的概念真的有很多人是一直没弄懂过的 结束语在这篇文章快写完的时候，用google随便搜了一下就在首页找到一篇对于各类gc概念介绍得比较透彻的文章，和使用度娘一搜首页全是各种抄来抄去的错误文章相比，对比简直是太强烈了，由此得出结论，技术类的资料能在外网查就在外网查吧，省时又省力，最后附上我找到的这篇文章貌似还是plumbr的联合创始人写的，不得不说很给力了]]></content>
+      <categories>
+        <category>杂谈</category>
+      </categories>
+      <tags>
+        <tag>JVM</tag>
+        <tag>Full GC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Java基础篇 IO系列之字节流]]></title>
+    <url>%2F2019%2F11%2F09%2Fiostream%2F</url>
+    <content type="text"></content>
+      <categories>
+        <category>Java基础</category>
+      </categories>
+      <tags>
+        <tag>IO</tag>
+        <tag>字节流</tag>
+        <tag>inputStream</tag>
+        <tag>outputStream</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[Java基础篇 IO系列之File类]]></title>
     <url>%2F2019%2F11%2F09%2FFile%E7%B1%BB%2F</url>
     <content type="text"><![CDATA[本文讨论的JDK版本为1.8.0_181，系统环境为macos FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下： An abstract representation of file and directory pathnames 文件和目录地址的抽象表示 在开始分析之前，我们先来看看这个类的构造函数 1. private File(String pathname, int prefixLength) 2. private File(String child, File parent) 3. public File(String pathname) 4. public File(String parent, String child) 5. public File(File parent, String child) 6. public File(URI uri) 总共六个构造函数，其中2个内部的4个公共的，它们的作用都是指定该File类代表的抽象路径，区别在于拼装方式不同，下面就4个公共方法简单介绍一下： public File(String pathname) 将pathname进行标准化处理之后赋值给File类，pathname为此文件或目录的标准路径名字符串,所谓标准路径名就是指不含有重复或多于的分隔符的路径字符串，若pathname中含有多于的分隔符，File类也会把多于的分隔符给过滤掉(例如//User会被处理为/User), 同时pathname可以为相对路径(test/haha)或者绝对路径(/test/haha)，若为相对路径的话，默认的前缀为当前工作目录，也就是System.getProperty(“user.dir”) public File(String parent, String child) 其中的parent表示前缀，只能为路径字符串，child表示后缀，可以为路径字符串也可以为文件名，最终赋值给File类的字符串为 经过标准处理之后的 parent + child public File(File parent, String child) 同上一个方法是一样的，最终赋值给File类的路径为 parent的路径 + child public File(URI uri) 将URL的path赋值给File类，会校验该URL的协议头是否为”file”，若不是会抛出异常 常用方法分析好了，下面开始进入正文，正如先前所说，File类既能表示一个文件也能表示一个目录，那么我们就File类的这两种状态来分别讨论一下 作为文件创建对于文件而言，首要的功能就是创建文件了，毕竟所有的文件操作前提都是你得有个文件File类提供了三个方法用于新建文件，其中一个内部方法，两个静态方法： 1. public boolean createNewFile() 2. public static File createTempFile(String prefix, String suffix) 3. public static File createTempFile(String prefix, String suffix,File directory) public boolean createNewFile() 比较简单，主要作用就是使用创建File类时传进来的路径来创建文件，若该路径中包含的目录不存在则会直接抛异常，若该文件已经存在了则不进行任何操作 public static File createTempFile(String prefix, String suffix)底层调用的也是public static File createTempFile(String prefix, String suffix,File directory),因此我们只需要看一下public static File createTempFile(String prefix, String suffix,File directory)就好了，此方法是一个静态方法，主要作用是用来创建一个临时文件，其中prefix为文件的前缀名，suffix为文件的后缀名，directory为目录，其中前缀必须为长度大于3的字符串，并且只取文件名（例如若传入的前缀为/user/test,那么最终取的前缀为test），后缀若未传则默认为”.tmp”, directory若未传的话默认为系统临时目录，即 System.getProperty(“java.io.tmpdir”); 读写创建了文件之后，我们当然会想要来对文件进行一下读写了,但File类本身并不提供读写功能，对于Fille的读取，我们是通过后面将会提到的字节流和字符流来实现的。 作为文件的特殊情况我们已经讨论完了，接下来再看一下作为目录的情况 作为目录目录特有的操作比较简单 创建创建目录共有两个方法，分别为： 1. public boolean mkdir() 创建当前目录，若父目录不存在，则创建失败若成功创建则返回true，否则返回false 2. public boolean mkdirs() 创建当前目录，若父目录不存在则先创建父目录，若成功创建则返回true，否则返回false 遍历目录目录的遍历是作为目录而言最常用的方法，一共有5个，分别如下： 1. public String[] list() 返回当前目录下所有文件或目录名称字符串数组（不会递归遍历） 2. public String[] list(FilenameFilter filter) 返回当前目录下符合filter过滤条件的所有文件或目录名称字符串数组，其中FilenameFilter是一个接口，提供了accept方法可用于重写（不会递归遍历） 3. public File[] listFiles() 查找当前目录下所有文件或者目录，并以File类的形式返回（不会递归遍历） 4. public File[] listFiles(FilenameFilter filter) 同理，会只返回filter过滤后的File类文件 5. public File[] listFiles(FileFilter filter) 查找当前目录下所有文件或者目录，并以File类的形式返回，会只返回filter过滤后的File文件，这里的FileFilter与FilenameFilter的区别在于FilenameFilter的入参是String，而FileFilter的入参为File类 公有方法作为文件和目录都有的方法： 1. public boolean canRead() 是否可读 2. public boolean canWrite() 是否可写 3. public boolean exists() 判断当前目录或文件是否存在 4. public boolean isDirectory() 判断当前是否为目录 5. public boolean isFile() 判断当前是否为文件 6. public boolean isHidden() 是否为隐藏文件 7. public boolean delete() 删除文件或者目录，立即删除 8. public void deleteOnExit() 删除文件或者目录，当java进程退出时执行 9. public boolean renameTo(File dest) 将文件或者目录改名为传入的File类的pathName，若目标目录或者文件已存在，则返回失败]]></content>

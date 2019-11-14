@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="JVM,Full GC," />
 
 
 
@@ -79,17 +79,18 @@
 
 
 
-<meta name="description" content="可以叫我菜鸡程序员,但请不要叫我码农">
-<meta name="keywords" content="可以叫我菜鸡程序员,但请不要叫我码农">
-<meta property="og:type" content="website">
-<meta property="og:title" content="noob">
-<meta property="og:url" content="http://blog.kuangenping.com/archives/2018/08/index.html">
+<meta name="description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
+<meta name="keywords" content="JVM,Full GC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="杂谈之什么是FullGC">
+<meta property="og:url" content="http://blog.kuangenping.com/2019/11/14/fullgc/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta property="og:description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-11-14T15:25:03.537Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="noob">
-<meta name="twitter:description" content="可以叫我菜鸡程序员,但请不要叫我码农">
+<meta name="twitter:title" content="杂谈之什么是FullGC">
+<meta name="twitter:description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
 
 
 
@@ -119,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://blog.kuangenping.com/archives/2018/08/"/>
+  <link rel="canonical" href="http://blog.kuangenping.com/2019/11/14/fullgc/"/>
 
 
 
 
 
-  <title>归档 | noob</title>
+  <title>杂谈之什么是FullGC | noob</title>
   
 
 
@@ -144,7 +145,7 @@
     
   
 
-  <div class="container sidebar-position-left page-archive">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -282,74 +283,245 @@
           <div id="content" class="content">
             
 
+  <div id="posts" class="posts-expand">
+    
+
+  
+
   
   
   
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
-
-      <span class="archive-page-counter">
-        
-        
-        
-          
-        
-        嗯..! 目前共计 9 篇日志。 继续努力。
-      </span>
-
-      
-
-        
-        
-        
-
-        
-          
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2018">2018</h1>
-          </div>
-        
-        
-
-        
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2019/11/14/fullgc/">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="sucan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/littledog.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="noob">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2018/08/16/总结/" itemprop="url">
-              
-                <span itemprop="name">个人对高并发服务的理解</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">杂谈之什么是FullGC</h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-08-16T09:55:02+08:00"
-              content="2018-08-16" >
-          08-16
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-14T23:24:20+08:00">
+                2019-11-14
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/杂谈/" itemprop="url" rel="index">
+                    <span itemprop="name">杂谈</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/11/14/fullgc/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/11/14/fullgc/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/11/14/fullgc/" class="leancloud_visitors" data-flag-title="杂谈之什么是FullGC">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1.7k 字
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  5 分钟
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
+      
 
+      
+        <blockquote>
+<p>本文基于JDK 1.8，使用的收集器为ParNew + CMS</p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续<code>full gc</code>,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bug暂且不表，有一个很奇怪的现象引起了我的注意，那就是从监控系统上来看，这个应用平均一分钟<code>full gc</code>次数高达十多次，按照我之前的理解<code>full gc</code>时是会<strong>stop the world</strong>的，<strong>stop the world</strong>的频率这么高，那么应用自身的服务已经跪掉了啊，但是看这个应用的业务指标监控，居然一切正常，这就有点超出我的理解能力了，后面为了解决这个疑问，针对什么是<code>full gc</code>，以及如何查看<code>full gc</code>的次数等查阅了很多资料，总算搞懂了<code>full gc</code>这个概念，在查资料的过程中发现中文社区里面包含太多错误的信息了，而且大多都是抄来抄去的，非常误导人，因此打算写一篇文章，对一些错误观点进行纠正。</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><h3 id="前置知识点"><a href="#前置知识点" class="headerlink" title="前置知识点"></a>前置知识点</h3><p>在真正开始探索Full GC之前，我们需要先介绍几个概念</p>
+<h4 id="GC"><a href="#GC" class="headerlink" title="GC"></a>GC</h4><p><code>GC</code> 全称为<code>garbage collection</code>,中文含义为垃圾回收，在jvm中的含义为回收无用内存空间</p>
+<h4 id="Young-space"><a href="#Young-space" class="headerlink" title="Young space"></a>Young space</h4><p>中文名为年轻代或者新生代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较短的对象</p>
+<h4 id="Tenured-space"><a href="#Tenured-space" class="headerlink" title="Tenured space"></a>Tenured space</h4><p>中文名为老年代或年老代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较长的对象</p>
+<h4 id="Minor-GC"><a href="#Minor-GC" class="headerlink" title="Minor GC"></a>Minor GC</h4><p><code>minor gc</code>指的是发生在年轻代或者说新生代（Young space）中的gc，也有人称其为<code>young gc</code>或者<code>ygc</code>,在下文中我们统一使用<code>minor gc</code>表示</p>
+<h4 id="Major-GC"><a href="#Major-GC" class="headerlink" title="Major GC"></a>Major GC</h4><p><code>major gc</code>指的是发生在老年代（Tenured space）中的gc，也有人称为<code>old gc</code>,<code>o gc</code>,<code>cms gc</code>等，在下文我们统一使用<code>major gc</code>表示</p>
+<h4 id="stop-the-world"><a href="#stop-the-world" class="headerlink" title="stop the world"></a>stop the world</h4><p>指的是用户线程在运行至安全点（safe point）或安全区域（safe region）之后，就自行挂起，进入暂停状态，对外的表现看起来就像是全世界都停止运转了一样,而不论何种gc算法，<strong>不论是<code>minor gc</code>还是<code>major gc</code>都会stop the world</strong>，区别只在于<strong>stop the world</strong>的时间长短。</p>
+<h3 id="什么是Full-GC"><a href="#什么是Full-GC" class="headerlink" title="什么是Full GC"></a>什么是Full GC</h3><p>先说一下结论，<code>Full GC</code>这个概念是没有官方定义的，而且含义还特别混乱，在不同地方表达的含义是不同的，需要就不同的场景分别进行讨论。</p>
+<h4 id="大众认知上"><a href="#大众认知上" class="headerlink" title="大众认知上"></a>大众认知上</h4><p>在通常意义上人们口中说的<code>Full GC</code>为一次特殊GC行为的描述，这次GC会回收整个堆的内存，包含老年代，新生代，metaspace等，这个是最常见的一种认知，很多人也就了解到这个程度，因此在遇到一些特殊场景的时候就会发现实际情况和自己的认知会发生冲突</p>
+<h4 id="从GC日志上"><a href="#从GC日志上" class="headerlink" title="从GC日志上"></a>从GC日志上</h4><p>在gc.log中会发现在部分gc日志头中也有Full GC这样的字眼，这里表示的含义是在这次GC的全过程中，都是<strong>Stop The world</strong>的状态，也就是说在这次GC的全过程中所有用户线程都是处于暂停的状态，那么在这里要喷一下中文jvm神书《深入理解JVM》了，在第二版第89页有这么一段话：</p>
+<blockquote>
+<p>GC 日志开头的“[GC”和“[Full GC”说明了这次垃圾收集的停顿类型，而不是用来区分新生代GC还是老年代GC的。如果有“Full”，说明这次GC是发生了Stop-The-World的，例如下面这段新生代收集器ParNew的日志也会出现“[Full GC”（这一般是因为出现了分配 担保失败之类的问题 .所以才导致STW)。如果是调用System.gc()方法所触发的收集，那么在这里将显示“[Full GC (System)”。</p>
+</blockquote>
+<p>这段话的描述是错误的，因为在前面说过，不论何种gc算法，不论新生代或是老年代，其gc都会发生stop the world，这里正确的描述是这次GC的全过程都是Stop-The-World的</p>
+<h4 id="从JDK自带的工具上"><a href="#从JDK自带的工具上" class="headerlink" title="从JDK自带的工具上"></a>从JDK自带的工具上</h4><p>使用jstat -gc命令能够查看到制定java 线程的gc次数，那么在经过我的多次尝试以及对比之后，我发现了使用jstat 查出来的FGC 次数和时间，实际上指的是老年代的收集器发生<strong>Stop the world</strong> 的次数和持续时间，对应本文而言，就是CMS收集器的<strong>Stop the world</strong>次数和时间</p>
+<h4 id="其他含义（坑爹版）"><a href="#其他含义（坑爹版）" class="headerlink" title="其他含义（坑爹版）"></a>其他含义（坑爹版）</h4><p>前面不是说到我在监控大盘上看到这个应用平均一分钟发生了十多次”Full GC”么，在我弄明白了前面两个<code>Full GC</code>的含义之后查看了gc.log文件，随后发现该应用实际上一次<code>Full GC</code>都没有出现，然后咨询了一下提供监控数据的同学，结果他说是通过JMX获取的，代码为：</p>
+<pre><code>ManagementFactory.getGarbageCollectorMXBeans()
+</code></pre><p>然后众所周知，使用MXBean获取到的只是收集器的执行次数，和<code>Full GC</code>半毛钱关系都没有啊，随后在追问了一下，发现做监控系统的同学直接把CMS收集器的收集次数当做了<code>Full GC</code>的次数来统计，what the fuck？？？？，只能说对于FUll GC的概念真的有很多人是一直没弄懂过的</p>
+<h2 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h2><p>在这篇文章快写完的时候，用google随便搜了一下就在首页找到一篇对于各类gc概念介绍得比较透彻的文章，和使用度娘一搜首页全是各种抄来抄去的错误文章相比，对比简直是太强烈了，由此得出结论，技术类的资料能在外网查就在外网查吧，省时又省力，最后附上我找到的<a href="https://plumbr.io/blog/garbage-collection/minor-gc-vs-major-gc-vs-full-gc" target="_blank" rel="noopener">这篇文章</a>貌似还是<code>plumbr</code>的联合创始人写的，不得不说很给力了</p>
+
+      
     </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+            <a href="/tags/Full-GC/" rel="tag"># Full GC</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/09/iostream/" rel="next" title="Java基础篇 IO系列之字节流">
+                <i class="fa fa-chevron-left"></i> Java基础篇 IO系列之字节流
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -357,6 +529,13 @@
 
 
           
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
 
         </div>
         
@@ -379,8 +558,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -444,6 +632,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前置知识点"><span class="nav-number">2.1.</span> <span class="nav-text">前置知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GC"><span class="nav-number">2.1.1.</span> <span class="nav-text">GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Young-space"><span class="nav-number">2.1.2.</span> <span class="nav-text">Young space</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Tenured-space"><span class="nav-number">2.1.3.</span> <span class="nav-text">Tenured space</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Minor-GC"><span class="nav-number">2.1.4.</span> <span class="nav-text">Minor GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Major-GC"><span class="nav-number">2.1.5.</span> <span class="nav-text">Major GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stop-the-world"><span class="nav-number">2.1.6.</span> <span class="nav-text">stop the world</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是Full-GC"><span class="nav-number">2.2.</span> <span class="nav-text">什么是Full GC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#大众认知上"><span class="nav-number">2.2.1.</span> <span class="nav-text">大众认知上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从GC日志上"><span class="nav-number">2.2.2.</span> <span class="nav-text">从GC日志上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从JDK自带的工具上"><span class="nav-number">2.2.3.</span> <span class="nav-text">从JDK自带的工具上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#其他含义（坑爹版）"><span class="nav-number">2.2.4.</span> <span class="nav-text">其他含义（坑爹版）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结束语"><span class="nav-number">3.</span> <span class="nav-text">结束语</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -592,6 +796,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 

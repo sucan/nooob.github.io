@@ -13,20 +13,6 @@
       </tags>
   </entry>
   <entry>
-    <title><![CDATA[Java基础篇 IO系列之字节流]]></title>
-    <url>%2F2019%2F11%2F09%2Fiostream%2F</url>
-    <content type="text"></content>
-      <categories>
-        <category>Java基础</category>
-      </categories>
-      <tags>
-        <tag>IO</tag>
-        <tag>字节流</tag>
-        <tag>inputStream</tag>
-        <tag>outputStream</tag>
-      </tags>
-  </entry>
-  <entry>
     <title><![CDATA[Java基础篇 IO系列之File类]]></title>
     <url>%2F2019%2F11%2F09%2FFile%E7%B1%BB%2F</url>
     <content type="text"><![CDATA[本文讨论的JDK版本为1.8.0_181，系统环境为macos FileFile 类的全限定名为 java.io.File,位于rt.jar中，正如《think in java》中介绍的那样，这个类与其叫做File，不如叫做FilePath，因为这个类除了能够表示一个文件之外，还能够表示一个目录，其实这一点也能从源码的第一行注释中看出来，注释如下： An abstract representation of file and directory pathnames 文件和目录地址的抽象表示 在开始分析之前，我们先来看看这个类的构造函数 1. private File(String pathname, int prefixLength) 2. private File(String child, File parent) 3. public File(String pathname) 4. public File(String parent, String child) 5. public File(File parent, String child) 6. public File(URI uri) 总共六个构造函数，其中2个内部的4个公共的，它们的作用都是指定该File类代表的抽象路径，区别在于拼装方式不同，下面就4个公共方法简单介绍一下： public File(String pathname) 将pathname进行标准化处理之后赋值给File类，pathname为此文件或目录的标准路径名字符串,所谓标准路径名就是指不含有重复或多于的分隔符的路径字符串，若pathname中含有多于的分隔符，File类也会把多于的分隔符给过滤掉(例如//User会被处理为/User), 同时pathname可以为相对路径(test/haha)或者绝对路径(/test/haha)，若为相对路径的话，默认的前缀为当前工作目录，也就是System.getProperty(“user.dir”) public File(String parent, String child) 其中的parent表示前缀，只能为路径字符串，child表示后缀，可以为路径字符串也可以为文件名，最终赋值给File类的字符串为 经过标准处理之后的 parent + child public File(File parent, String child) 同上一个方法是一样的，最终赋值给File类的路径为 parent的路径 + child public File(URI uri) 将URL的path赋值给File类，会校验该URL的协议头是否为”file”，若不是会抛出异常 常用方法分析好了，下面开始进入正文，正如先前所说，File类既能表示一个文件也能表示一个目录，那么我们就File类的这两种状态来分别讨论一下 作为文件创建对于文件而言，首要的功能就是创建文件了，毕竟所有的文件操作前提都是你得有个文件File类提供了三个方法用于新建文件，其中一个内部方法，两个静态方法： 1. public boolean createNewFile() 2. public static File createTempFile(String prefix, String suffix) 3. public static File createTempFile(String prefix, String suffix,File directory) public boolean createNewFile() 比较简单，主要作用就是使用创建File类时传进来的路径来创建文件，若该路径中包含的目录不存在则会直接抛异常，若该文件已经存在了则不进行任何操作 public static File createTempFile(String prefix, String suffix)底层调用的也是public static File createTempFile(String prefix, String suffix,File directory),因此我们只需要看一下public static File createTempFile(String prefix, String suffix,File directory)就好了，此方法是一个静态方法，主要作用是用来创建一个临时文件，其中prefix为文件的前缀名，suffix为文件的后缀名，directory为目录，其中前缀必须为长度大于3的字符串，并且只取文件名（例如若传入的前缀为/user/test,那么最终取的前缀为test），后缀若未传则默认为”.tmp”, directory若未传的话默认为系统临时目录，即 System.getProperty(“java.io.tmpdir”); 读写创建了文件之后，我们当然会想要来对文件进行一下读写了,但File类本身并不提供读写功能，对于Fille的读取，我们是通过后面将会提到的字节流和字符流来实现的。 作为文件的特殊情况我们已经讨论完了，接下来再看一下作为目录的情况 作为目录目录特有的操作比较简单 创建创建目录共有两个方法，分别为： 1. public boolean mkdir() 创建当前目录，若父目录不存在，则创建失败若成功创建则返回true，否则返回false 2. public boolean mkdirs() 创建当前目录，若父目录不存在则先创建父目录，若成功创建则返回true，否则返回false 遍历目录目录的遍历是作为目录而言最常用的方法，一共有5个，分别如下： 1. public String[] list() 返回当前目录下所有文件或目录名称字符串数组（不会递归遍历） 2. public String[] list(FilenameFilter filter) 返回当前目录下符合filter过滤条件的所有文件或目录名称字符串数组，其中FilenameFilter是一个接口，提供了accept方法可用于重写（不会递归遍历） 3. public File[] listFiles() 查找当前目录下所有文件或者目录，并以File类的形式返回（不会递归遍历） 4. public File[] listFiles(FilenameFilter filter) 同理，会只返回filter过滤后的File类文件 5. public File[] listFiles(FileFilter filter) 查找当前目录下所有文件或者目录，并以File类的形式返回，会只返回filter过滤后的File文件，这里的FileFilter与FilenameFilter的区别在于FilenameFilter的入参是String，而FileFilter的入参为File类 公有方法作为文件和目录都有的方法： 1. public boolean canRead() 是否可读 2. public boolean canWrite() 是否可写 3. public boolean exists() 判断当前目录或文件是否存在 4. public boolean isDirectory() 判断当前是否为目录 5. public boolean isFile() 判断当前是否为文件 6. public boolean isHidden() 是否为隐藏文件 7. public boolean delete() 删除文件或者目录，立即删除 8. public void deleteOnExit() 删除文件或者目录，当java进程退出时执行 9. public boolean renameTo(File dest) 将文件或者目录改名为传入的File类的pathName，若目标目录或者文件已存在，则返回失败]]></content>

@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="JVM,Full GC," />
+  <meta name="keywords" content="B-Tree,B+Tree," />
 
 
 
@@ -79,18 +79,22 @@
 
 
 
-<meta name="description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
-<meta name="keywords" content="JVM,Full GC">
+<meta name="description" content="谈谈B-Tree 和 B+Tree前言周末在看《High Performance Mysql》（中文译为《高性能Mysql》）一书的时候，在index部分看到了B-Tree的概念，实际上这个名词于我而言并不陌生，毕竟之前为了应付面试的时候翻过很多博客，但今天再次看到这个名词时突然回忆不起来B-Tree到底是个什么东西了，于是用度娘去搜了一下，结果搜出来的定义千奇百怪（中文社区里面真的是一堆错误文章">
+<meta name="keywords" content="B-Tree,B+Tree">
 <meta property="og:type" content="article">
-<meta property="og:title" content="杂谈之什么是FullGC">
-<meta property="og:url" content="http://blog.kuangenping.com/2019/11/14/fullgc/index.html">
+<meta property="og:title" content="J谈谈B-Tree 和 B+Tree">
+<meta property="og:url" content="http://blog.kuangenping.com/2020/02/22/BTree/index.html">
 <meta property="og:site_name" content="noob">
-<meta property="og:description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
+<meta property="og:description" content="谈谈B-Tree 和 B+Tree前言周末在看《High Performance Mysql》（中文译为《高性能Mysql》）一书的时候，在index部分看到了B-Tree的概念，实际上这个名词于我而言并不陌生，毕竟之前为了应付面试的时候翻过很多博客，但今天再次看到这个名词时突然回忆不起来B-Tree到底是个什么东西了，于是用度娘去搜了一下，结果搜出来的定义千奇百怪（中文社区里面真的是一堆错误文章">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-11-14T15:25:03.537Z">
+<meta property="og:image" content="http://blog.kuangenping.com/images/btree1.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/btree2.png">
+<meta property="og:image" content="http://blog.kuangenping.com/images/btree3.png">
+<meta property="og:updated_time" content="2020-03-22T07:07:43.477Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="杂谈之什么是FullGC">
-<meta name="twitter:description" content="本文基于JDK 1.8，使用的收集器为ParNew + CMS  前言这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续full gc,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bu">
+<meta name="twitter:title" content="J谈谈B-Tree 和 B+Tree">
+<meta name="twitter:description" content="谈谈B-Tree 和 B+Tree前言周末在看《High Performance Mysql》（中文译为《高性能Mysql》）一书的时候，在index部分看到了B-Tree的概念，实际上这个名词于我而言并不陌生，毕竟之前为了应付面试的时候翻过很多博客，但今天再次看到这个名词时突然回忆不起来B-Tree到底是个什么东西了，于是用度娘去搜了一下，结果搜出来的定义千奇百怪（中文社区里面真的是一堆错误文章">
+<meta name="twitter:image" content="http://blog.kuangenping.com/images/btree1.png">
 
 
 
@@ -120,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="http://blog.kuangenping.com/2019/11/14/fullgc/"/>
+  <link rel="canonical" href="http://blog.kuangenping.com/2020/02/22/BTree/"/>
 
 
 
 
 
-  <title>杂谈之什么是FullGC | noob</title>
+  <title>J谈谈B-Tree 和 B+Tree | noob</title>
   
 
 
@@ -297,7 +301,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2019/11/14/fullgc/">
+    <link itemprop="mainEntityOfPage" href="http://blog.kuangenping.com/2020/02/22/BTree/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="sucan">
@@ -314,7 +318,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">杂谈之什么是FullGC</h1>
+          <h1 class="post-title" itemprop="name headline">J谈谈B-Tree 和 B+Tree</h1>
         
 
         <div class="post-meta">
@@ -326,8 +330,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-14T23:24:20+08:00">
-                2019-11-14
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-22T14:50:00+08:00">
+                2020-02-22
               </time>
             
 
@@ -349,8 +353,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
+                  <a href="/categories/算法和数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">算法和数据结构</span>
                   </a>
                 </span>
 
@@ -367,8 +371,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2019/11/14/fullgc/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2019/11/14/fullgc/" itemprop="commentCount"></span>
+                <a href="/2020/02/22/BTree/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/02/22/BTree/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -376,7 +380,7 @@
 
           
           
-             <span id="/2019/11/14/fullgc/" class="leancloud_visitors" data-flag-title="杂谈之什么是FullGC">
+             <span id="/2020/02/22/BTree/" class="leancloud_visitors" data-flag-title="J谈谈B-Tree 和 B+Tree">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -401,7 +405,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.7k 字
+                  3.8k 字
                 </span>
               
 
@@ -417,7 +421,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  5 分钟
+                  16 分钟
                 </span>
               
             </div>
@@ -438,29 +442,467 @@
       
 
       
-        <blockquote>
-<p>本文基于JDK 1.8，使用的收集器为ParNew + CMS</p>
-</blockquote>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章的起因是这样的，在上周五凌晨很苦逼得参加双十一压测值班的时候，有个业务方突然打电话来说我们提供的客户端存在内存泄漏问题导致线上应用持续<code>full gc</code>,本来已经快要睡着的我立马就精神起来了，一通排查，最终定位到了确实是客户端有个bug会导致部分数据会被一直持有进入老年代之后gc不掉，从而就导致了老年代的频繁gc，具体bug暂且不表，有一个很奇怪的现象引起了我的注意，那就是从监控系统上来看，这个应用平均一分钟<code>full gc</code>次数高达十多次，按照我之前的理解<code>full gc</code>时是会<strong>stop the world</strong>的，<strong>stop the world</strong>的频率这么高，那么应用自身的服务已经跪掉了啊，但是看这个应用的业务指标监控，居然一切正常，这就有点超出我的理解能力了，后面为了解决这个疑问，针对什么是<code>full gc</code>，以及如何查看<code>full gc</code>的次数等查阅了很多资料，总算搞懂了<code>full gc</code>这个概念，在查资料的过程中发现中文社区里面包含太多错误的信息了，而且大多都是抄来抄去的，非常误导人，因此打算写一篇文章，对一些错误观点进行纠正。</p>
-<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><h3 id="前置知识点"><a href="#前置知识点" class="headerlink" title="前置知识点"></a>前置知识点</h3><p>在真正开始探索Full GC之前，我们需要先介绍几个概念</p>
-<h4 id="GC"><a href="#GC" class="headerlink" title="GC"></a>GC</h4><p><code>GC</code> 全称为<code>garbage collection</code>,中文含义为垃圾回收，在jvm中的含义为回收无用内存空间</p>
-<h4 id="Young-space"><a href="#Young-space" class="headerlink" title="Young space"></a>Young space</h4><p>中文名为年轻代或者新生代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较短的对象</p>
-<h4 id="Tenured-space"><a href="#Tenured-space" class="headerlink" title="Tenured space"></a>Tenured space</h4><p>中文名为老年代或年老代，为JVM 堆的一部分，由分代GC概念划分而来，保存生命周期较长的对象</p>
-<h4 id="Minor-GC"><a href="#Minor-GC" class="headerlink" title="Minor GC"></a>Minor GC</h4><p><code>minor gc</code>指的是发生在年轻代或者说新生代（Young space）中的gc，也有人称其为<code>young gc</code>或者<code>ygc</code>,在下文中我们统一使用<code>minor gc</code>表示</p>
-<h4 id="Major-GC"><a href="#Major-GC" class="headerlink" title="Major GC"></a>Major GC</h4><p><code>major gc</code>指的是发生在老年代（Tenured space）中的gc，也有人称为<code>old gc</code>,<code>o gc</code>,<code>cms gc</code>等，在下文我们统一使用<code>major gc</code>表示</p>
-<h4 id="stop-the-world"><a href="#stop-the-world" class="headerlink" title="stop the world"></a>stop the world</h4><p>指的是用户线程在运行至安全点（safe point）或安全区域（safe region）之后，就自行挂起，进入暂停状态，对外的表现看起来就像是全世界都停止运转了一样,而不论何种gc算法，<strong>不论是<code>minor gc</code>还是<code>major gc</code>都会stop the world</strong>，区别只在于<strong>stop the world</strong>的时间长短。</p>
-<h3 id="什么是Full-GC"><a href="#什么是Full-GC" class="headerlink" title="什么是Full GC"></a>什么是Full GC</h3><p>先说一下结论，<code>Full GC</code>这个概念是没有官方定义的，而且含义还特别混乱，在不同地方表达的含义是不同的，需要就不同的场景分别进行讨论。</p>
-<h4 id="大众认知上"><a href="#大众认知上" class="headerlink" title="大众认知上"></a>大众认知上</h4><p>在通常意义上人们口中说的<code>Full GC</code>为一次特殊GC行为的描述，这次GC会回收整个堆的内存，包含老年代，新生代，metaspace等，这个是最常见的一种认知，很多人也就了解到这个程度，因此在遇到一些特殊场景的时候就会发现实际情况和自己的认知会发生冲突</p>
-<h4 id="从GC日志上"><a href="#从GC日志上" class="headerlink" title="从GC日志上"></a>从GC日志上</h4><p>在gc.log中会发现在部分gc日志头中也有Full GC这样的字眼，这里表示的含义是在这次GC的全过程中，都是<strong>Stop The world</strong>的状态，也就是说在这次GC的全过程中所有用户线程都是处于暂停的状态，那么在这里要喷一下中文jvm神书《深入理解JVM》了，在第二版第89页有这么一段话：</p>
-<blockquote>
-<p>GC 日志开头的“[GC”和“[Full GC”说明了这次垃圾收集的停顿类型，而不是用来区分新生代GC还是老年代GC的。如果有“Full”，说明这次GC是发生了Stop-The-World的，例如下面这段新生代收集器ParNew的日志也会出现“[Full GC”（这一般是因为出现了分配 担保失败之类的问题 .所以才导致STW)。如果是调用System.gc()方法所触发的收集，那么在这里将显示“[Full GC (System)”。</p>
-</blockquote>
-<p>这段话的描述是错误的，因为在前面说过，不论何种gc算法，不论新生代或是老年代，其gc都会发生stop the world，这里正确的描述是这次GC的全过程都是Stop-The-World的</p>
-<h4 id="从JDK自带的工具上"><a href="#从JDK自带的工具上" class="headerlink" title="从JDK自带的工具上"></a>从JDK自带的工具上</h4><p>使用jstat -gc命令能够查看到制定java 线程的gc次数，那么在经过我的多次尝试以及对比之后，我发现了使用jstat 查出来的FGC 次数和时间，实际上指的是老年代的收集器发生<strong>Stop the world</strong> 的次数和持续时间，对应本文而言，就是CMS收集器的<strong>Stop the world</strong>次数和时间</p>
-<h4 id="其他含义（坑爹版）"><a href="#其他含义（坑爹版）" class="headerlink" title="其他含义（坑爹版）"></a>其他含义（坑爹版）</h4><p>前面不是说到我在监控大盘上看到这个应用平均一分钟发生了十多次”Full GC”么，在我弄明白了前面两个<code>Full GC</code>的含义之后查看了gc.log文件，随后发现该应用实际上一次<code>Full GC</code>都没有出现，然后咨询了一下提供监控数据的同学，结果他说是通过JMX获取的，代码为：</p>
-<pre><code>ManagementFactory.getGarbageCollectorMXBeans()
-</code></pre><p>然后众所周知，使用MXBean获取到的只是收集器的执行次数，和<code>Full GC</code>半毛钱关系都没有啊，随后在追问了一下，发现做监控系统的同学直接把CMS收集器的收集次数当做了<code>Full GC</code>的次数来统计，what the fuck？？？？，只能说对于FUll GC的概念真的有很多人是一直没弄懂过的</p>
-<h2 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h2><p>在这篇文章快写完的时候，用google随便搜了一下就在首页找到一篇对于各类gc概念介绍得比较透彻的文章，和使用度娘一搜首页全是各种抄来抄去的错误文章相比，对比简直是太强烈了，由此得出结论，技术类的资料能在外网查就在外网查吧，省时又省力，最后附上我找到的<a href="https://plumbr.io/blog/garbage-collection/minor-gc-vs-major-gc-vs-full-gc" target="_blank" rel="noopener">这篇文章</a>貌似还是<code>plumbr</code>的联合创始人写的，不得不说很给力了</p>
+        <h1 id="谈谈B-Tree-和-B-Tree"><a href="#谈谈B-Tree-和-B-Tree" class="headerlink" title="谈谈B-Tree 和 B+Tree"></a>谈谈B-Tree 和 B+Tree</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>周末在看《High Performance Mysql》（中文译为《高性能Mysql》）一书的时候，在index部分看到了B-Tree的概念，实际上这个名词于我而言并不陌生，毕竟之前为了应付面试的时候翻过很多博客，但今天再次看到这个名词时突然回忆不起来B-Tree到底是个什么东西了，于是用度娘去搜了一下，结果搜出来的定义千奇百怪（中文社区里面真的是一堆错误文章抄来抄去，甚至有人说B-Tree是Balance Binary Tree，还假装很懂的说作者是Adelson-Velskii和Landis，看得我一脸懵逼，你这样让AVL-Tree情何以堪？），后面又去外网搜了一下，也发现挺多不一样的定义的，真的是越看越不懂了，后面没办法了就直接找到了原作者<code>R. BAYER</code> and <code>E. MCCREIGHT</code>1971年发布的论文看了一遍，算是真的去了解了一下这个数据结构。</p>
+<h2 id="什么是B-Tree"><a href="#什么是B-Tree" class="headerlink" title="什么是B-Tree"></a>什么是B-Tree</h2><h3 id="关于B-Tree这个名词的说明"><a href="#关于B-Tree这个名词的说明" class="headerlink" title="关于B-Tree这个名词的说明"></a>关于B-Tree这个名词的说明</h3><p>首先B-Tree这个名词是在<code>R. BAYER</code> and <code>E. MCCREIGHT</code> 1971年发布的一篇文章<a href="http://www.inf.fu-berlin.de/lehre/SS10/DBS-Intro/Reader/BayerBTree-72.pdf" target="_blank" rel="noopener">《Organization and Maintenance of Large Ordered Indexes》</a>中提到的,原文如下：</p>
+<pre><code>The pages of the index are organized in a special datastructure, so-called B-trees.
+</code></pre><p>看到了吧，虽然B-Tree确实是一颗自平衡的树但是B-Tree的全名就是”B-Tree”,而不是什么Balanced Tree之类的缩写，可以说Balanced Tree包含B-tree但不仅仅只有b-tree</p>
+<p>ps:其实我更觉得这个B是作者 <code>R. BAYER</code> 的缩写</p>
+<h3 id="B-Tree-的定义"><a href="#B-Tree-的定义" class="headerlink" title="B-Tree 的定义"></a>B-Tree 的定义</h3><p>在文章中，B-tree的定义如下：</p>
+<p>假定h为大于等于0的整数，k为一个自然数，那么满足以下条件的有向树T (T ∈ τ(k,h) )就被称为B-Tree：</p>
+<ol>
+<li>根节点到所有叶子节点的路径长度都相同，且该路径节点数为h</li>
+<li>除根节点和叶子节点之外，每个节点都至少包含k+1个子节点；对于根节点而言要么它同时也是叶子节点，要么至少包含2个子节点</li>
+<li>每个节点最多包含2k + 1个子节点</li>
+</ol>
+<p>是的你没看错，以上就是B-Tree的完整原始定义，就是这么简洁，没有什么花里胡哨的m阶cell(m/2)之类的东西</p>
+<h3 id="B-Tree在索引存储上的使用"><a href="#B-Tree在索引存储上的使用" class="headerlink" title="B-Tree在索引存储上的使用"></a>B-Tree在索引存储上的使用</h3><p>在上述定义的基础上，当使用B-Tree的节点作为索引储存的页的时候，B-tree还会有以下性质：</p>
+<ol>
+<li>除了根页节点能保存的key的个数范围为1~2k之外，其他所有页节点能保存的key的个数的范围为k~2k</li>
+<li>假定一个非叶子页节点为<strong>P</strong>，并且该节点上保存的key的个数为l，那么此节点上会有l+1个子节点</li>
+<li>在页节点<strong>P</strong> 中的所有key都是单调递增的，形如:x0,x1,x2,……,xl;k &lt;= l &lt;= 2k,若<strong>P</strong>为根节点的话则：1 &lt;= l &lt;= 2k，此外在<strong>P</strong>中还会包含l + 1个指针用于指向<strong>P</strong>的子节点，这些指针用p0,p1,……,pl表示。</li>
+</ol>
+<p>用于存储索引的一页，同时也是B-Tree的一个节点<strong>P</strong>的内部结构大概长得像下面这样：</p>
+<p>引用一下论文中的图<img src="/images/btree1.png" alt="1"></p>
+<p>p<sub>0</sub>,(x<sub>1</sub>,p<sub>1</sub>),(x<sub>2</sub>,p<sub>2</sub>),…..(x<sub>l</sub>,p<sub>l</sub>)</p>
+<p>图中的p0是一个指针，指向所有key都小于x1的节点，随后就是索引里面包含的值x1，然后是x1附带的一些附加信息α1，随后是指针p1指向所有key都大于等于x1，但小于等于x2的节点……,最后是个指针pl，指向所有key都大于xl的节点，了解了这种结构之后就能知道为什么一个节点最多只能保存2k个key:因为指针数会等于子节点数等于2k+1，而key的个数会是指针数-1</p>
+<h2 id="B-Tree支持的基本操作"><a href="#B-Tree支持的基本操作" class="headerlink" title="B-Tree支持的基本操作"></a>B-Tree支持的基本操作</h2><h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><p>对于B-Tree来说查找是比较简单的一个操作，我们假定要查的key 为 y，当前页为<strong>P</strong> 查询过程用语言来描述就是：</p>
+<ol>
+<li>二分查找y在 <strong>P</strong>中是否存在，若存在则直接返回</li>
+<li>若y在<strong>P</strong>不存在，并且<strong>P</strong>为叶子节点，则返回不存在</li>
+<li>若y在<strong>P</strong>不存在，并且<strong>P</strong>不为叶子节点，则进入<strong>P</strong>的子节点，该子节点的指针为pi，满足xi-1 &lt; y &lt; xi+1</li>
+</ol>
+<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><p>插入操作的逻辑其实很自然而然就能想到，首先，我们假设需要插入的元素为e，那么在不考虑平衡性的情况下，插入逻辑应该是这样的：</p>
+<ul>
+<li>利用上面查找的逻辑，查找当前Btree中有无已存在的e<ul>
+<li>若有，直接返回插入成功</li>
+<li>若无，则在搜索到最后一步的叶子页中插入e</li>
+</ul>
+</li>
+</ul>
+<p>那么上面的逻辑有一个很明显的问题，那就是叶子页的元素个数有可能超过2k，这在Btree的定义中是不被允许的，那么为了解决这个问题，我们就还需要做一步操作：<strong>页分裂</strong></p>
+<h4 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a>页分裂</h4><p>所谓的页分裂就是把一个拥有2k + 1个元素的页进行分裂，产出一个带父节点的新页，分裂之后原来的页中保留前k个元素，分裂出来的页中保留后k个元素，同时分裂前原页中的第k+1个元素会作为分裂出来的页的父节点。</p>
+<p>就上述逻辑举个例子，假设原来的叶子节点为<strong>P</strong>,<strong>P</strong>中有2k个数据，<strong>P</strong>的父页为<strong>Q</strong>，那么该<strong>P</strong>中的数据存储情况应该是这样的：</p>
+<p>p<sub>0</sub>,(x<sub>1</sub>,p<sub>1</sub>),(x<sub>2</sub>,p<sub>2</sub>),…..(x<sub>2k</sub>,p<sub>2k</sub>)</p>
+<p>当插入了e之后，现在的<strong>P</strong>会长这样：</p>
+<p>p<sub>0</sub>,(x<sub>1</sub>,p<sub>1</sub>),(x<sub>2</sub>,p<sub>2</sub>),…..,(x<sub>k+1</sub>,p<sub>k+1</sub>),……(x<sub>2k+1</sub>,p<sub>2k+1</sub>)</p>
+<p>进行页分裂操作之后，<strong>P</strong>会长这样：</p>
+<p>p<sub>0</sub>,(x<sub>1</sub>,p<sub>1</sub>),(x<sub>2</sub>,p<sub>2</sub>),…..,(x<sub>k</sub>,p<sub>k</sub>)</p>
+<p>产生的新页我们假设为<strong>P’</strong>，<strong>P’</strong>长这样：</p>
+<p>p<sub>k+1</sub>,(x<sub>k+2</sub>,p<sub>k+2</sub>),(x<sub>k+3</sub>,p<sub>k+3</sub>),…..,(x<sub>2k</sub>,p<sub>2k</sub>)</p>
+<p>同时<strong>P’</strong>的父节点为：</p>
+<p>(x<sub>k+1</sub>,p’)</p>
+<p>其中p‘指向的页就是产生的新页<strong>P’</strong>，随后把此节点再插入<strong>P</strong>的父页<strong>Q</strong>中，这样一次完整的页分裂操作就做完了。</p>
+<p>所以，完整版的插入逻辑如下：</p>
+<ul>
+<li>利用上面查找的逻辑，查找当前Btree中有无已存在的e<ul>
+<li>若有，直接返回插入成功</li>
+<li>若无，则在搜索到最后一步的叶子页中插入e<ul>
+<li>插入e后叶子页元素个数没有超过2k，插入结束</li>
+<li>插入e后叶子页元素个数超过2k，执行页分裂，并向上递归</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>关于删除，不考虑平衡性的话同样很容易就能想到一个朴素的操作办法，流程如下：</p>
+<ul>
+<li>利用上面查找的逻辑，查找当前Btree中有无已存在的e<ul>
+<li>若无，直接返回删除成功</li>
+<li>若有，直接删除该元素</li>
+</ul>
+</li>
+</ul>
+<p>那么这个操作流程肯定是有问题的，问题就出在删除元素上，一共有两个问题:</p>
+<ul>
+<li>若该元素不在叶子页上，那一旦该元素被删除了，那该元素指向的子页怎么办？</li>
+<li>若该元素在叶子页上，那么一旦叶子页中的元素个数被删至低于k个了，怎么办？</li>
+</ul>
+<p>第一个问题比较好解决，如果该元素不在叶子节点上的话，就将该元素与它的右子节点的第一个元素进行交换，直到交换至叶子节点。</p>
+<p>要解决第二个问题的话就需要引入一个新的操作：<strong>页合并</strong></p>
+<h4 id="页合并"><a href="#页合并" class="headerlink" title="页合并"></a>页合并</h4><p>页合并就是指把两个兄弟页合并为一个页的操作，具体怎么操作，我们等会用一个例子来说明，现在先约定一些名词，假设页<strong>Q</strong>中的元素e的左指针指向页<strong>P</strong>，右指针指向页<strong>P’</strong>,那么<strong>P</strong>和<strong>P’</strong>就被称为兄弟页，页合并操作都是在兄弟页之间进行的，同时页合并也有两种操作，分别被称为<strong>Catenation</strong>和<strong>Underflow</strong></p>
+<h5 id="Catenation"><a href="#Catenation" class="headerlink" title="Catenation"></a>Catenation</h5><p>Catenation发生在两个兄弟页中的元素之和小于2K的情况下，这种情况只需要把父页中的元素e给删掉，然后用e作为连接元素将<strong>P’</strong>中的所有元素合并至<strong>P</strong>中，随后删除掉页<strong>P’</strong>,用图表示如下：</p>
+<p>合并前：</p>
+<p><img src="/images/btree2.png" alt="合并前"></p>
+<p>合并后：</p>
+<p><img src="/images/btree3.png" alt="合并后"></p>
+<p>当然父节点中的元素被删掉之后也可能出现元素个数小于k的情况，所以一旦执行了Catenation操作，必须要向上递归执行页合并操作</p>
+<h5 id="Underflow"><a href="#Underflow" class="headerlink" title="Underflow"></a>Underflow</h5><p>Underflow发生在两个兄弟页中的元素之和大于等于2k的情况下，这种情况下，我们首先还是先对这两个页做一遍Catenation操作，现在<strong>P</strong>中的元素个数就一定是大于等于2k + 1了，随后我们再对<strong>P</strong>执行一遍页分裂操作即可。</p>
+<p>虽然页分裂操作会向父页中插入一个值，但是由于在执行页分裂操作前我们就从父页中删除了一个值，所以父页中的元素个数是不会变的，因此Underflow执行一次即可，无需递归执行</p>
+<h2 id="B-Tree-java代码实现"><a href="#B-Tree-java代码实现" class="headerlink" title="B-Tree java代码实现"></a>B-Tree java代码实现</h2><pre><code>public class BTree {
+
+private int k;
+private Page root;
+
+public BTree(int k) {
+    this.k = k;
+    root = new Page();
+}
+
+public Page getRoot() {
+    return root;
+}
+
+/**
+ * b-tree的节点
+ */
+private class Page {
+    private Element parent;
+    private Element[] elements = new Element[(k + 1) * 2];
+    private int elementsSize = 1;
+
+    Page() {
+        elements[0] = new Element(null);
+        elements[0].setIndex(0);
+        elements[0].setPage(this);
+    }
+
+    public int getElementsSize() {
+        return elementsSize;
+    }
+
+    public void setElementsSize(int elementsSize) {
+        this.elementsSize = elementsSize;
+    }
+
+    public Element getParent() {
+        return parent;
+    }
+
+    public void setParent(Element parent) {
+        this.parent = parent;
+    }
+
+    public void setElements(Element[] elements) {
+        this.elements = elements;
+    }
+
+    public Element[] getElements() {
+        return elements;
+    }
+
+    public boolean addElement(Element value) {
+        int index = bsSearch(elements, 0, elementsSize - 1, value.getV());
+        return addElement(index + 1, value);
+    }
+
+    public boolean addElement(int index, Element value) {
+        value.setPage(this);
+        for (int i = elementsSize; i &gt; index; i--) {
+            elements[i] = elements[i - 1];
+            elements[i].setIndex(i);
+        }
+        value.setIndex(index);
+        elements[index] = value;
+        elementsSize++;
+        return true;
+    }
+
+    /**
+     * 返回小于等于v的第一个元素
+     *
+     * @param v
+     * @return
+     */
+    public Element search(int v) {
+        int index = bsSearch(elements, 0, elementsSize - 1, v);
+        return elements[index];
+    }
+
+    public Element getElement(int index) {
+        return elements[index];
+    }
+
+    public boolean delete(int index) {
+        for (int i = index; i &lt; elementsSize; i++) {
+            elements[i] = elements[i + 1];
+            if (elements[i] != null) {
+                elements[i].setIndex(i);
+            }
+        }
+        elementsSize--;
+        return true;
+    }
+
+    /**
+     * 返回小于等于当前v的第一个元素下标.若不存在则返回-1
+     *
+     * @param elements
+     * @param v
+     * @return
+     */
+    private int bsSearch(Element[] elements, int l, int r, int v) {
+        for (; l &lt; r; ) {
+            int mid = (l + r + 1) / 2;
+            if (elements[mid].getV() != null &amp;&amp; elements[mid].getV() &gt; v) {
+                r = mid - 1;
+            } else {
+                l = mid;
+            }
+        }
+        return l;
+    }
+}
+
+/**
+ * 节点中的元素
+ */
+private class Element {
+    private Page rightIndex;
+    private Page page;
+    private int index;
+    private Integer v;
+
+    public Element(Integer v) {
+        this.v = v;
+    }
+
+    public Page getRightIndex() {
+        return rightIndex;
+    }
+
+    public void setRightIndex(Page rightIndex) {
+        this.rightIndex = rightIndex;
+        if (rightIndex != null) {
+            rightIndex.setParent(this);
+        }
+    }
+
+    public Integer getV() {
+        return v;
+    }
+
+    public void setV(Integer v) {
+        this.v = v;
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public void setPage(Page page) {
+        this.page = page;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+}
+
+public Element search(int v) {
+    return search(root, v);
+}
+
+public boolean insert(int v) {
+    return insert(root, v);
+}
+
+public boolean delete(int v) {
+    Element vEle = search(v);
+    if (vEle == null) {
+        return false;
+    }
+    // 叶子节点
+    if (vEle.getRightIndex() == null) {
+        Page currentPage = vEle.getPage();
+        currentPage.delete(vEle.getIndex());
+        adjust(currentPage);
+    } else {
+        Page tmpPage = vEle.getRightIndex();
+        for (; ; ) {
+            Element element = tmpPage.getElement(0);
+            if (element.getRightIndex() != null) {
+                tmpPage = element.getRightIndex();
+                continue;
+            }
+            element = tmpPage.getElement(1);
+            vEle.setV(element.getV());
+            tmpPage.delete(element.getIndex());
+            adjust(tmpPage);
+            break;
+        }
+    }
+    return true;
+}
+
+private Element search(Page node, int v) {
+    if (node == null) {
+        return null;
+    }
+    Element element = node.search(v);
+    if (element.getV() != null &amp;&amp; element.getV() == v) {
+        return element;
+    }
+    return search(element.getRightIndex(), v);
+}
+
+
+private boolean insert(Page node, int v) {
+    Element vEle = node.search(v);
+    if (vEle.getRightIndex() == null) {
+        node.addElement(new Element(v));
+        pageSplit(node);
+        return true;
+    }
+    if (vEle.getV() != null &amp;&amp; vEle.getV() == v) {
+        return true;
+    }
+    return insert(vEle.getRightIndex(), v);
+}
+
+/**
+ * 0. 判断当前页是否需要进行页分裂，不需要直接返回
+ * 1. 将当前页节点 P 中间第k个元素 E(k) 取出
+ * 2. 新建一个页节点 Pn 将 E(k) 的右指针指向 Pn
+ * 3. 将 P 中的第k+1 ~ 2k + 1个元素移至 Pn 中
+ * 4. 若 P 为root，则将E(k) 的左指针指向 P ，并新建一个页节点 Pr ，将 E（k）放入 Pr 并将Pr置为为root
+ * 5. 否则 将E(k) 插入P的父页中，递归上述操作
+ *
+ * @param currentPage
+ */
+private void pageSplit(Page currentPage) {
+    if (currentPage.getElementsSize() - 1 &lt;= k &lt;&lt; 1) {
+        return;
+    }
+    Element midElement = currentPage.getElement(k + 1);
+    currentPage.getElements()[k + 1] = null;
+    Page pn = new Page();
+    for (int i = k + 2; i &lt; currentPage.getElementsSize(); i++) {
+        pn.addElement(i - k - 1, currentPage.getElement(i));
+        currentPage.getElements()[i] = null;
+    }
+    pn.getElement(0).setRightIndex(midElement.getRightIndex());
+    midElement.setRightIndex(pn);
+
+    currentPage.setElementsSize(currentPage.getElementsSize() - k - 1);
+    if (currentPage.getParent() == null) {
+        Page pr = new Page();
+        pr.getElement(0).setRightIndex(currentPage);
+        pr.addElement(midElement);
+        root = pr;
+        return;
+    }
+    Page parentPage = currentPage.getParent().getPage();
+    parentPage.addElement(midElement);
+    pageSplit(parentPage);
+}
+
+private void adjust(Page currentPage) {
+    Element parentElement = currentPage.getParent();
+    // root 就不用管了
+    if (parentElement == null) {
+        return;
+    }
+    //元素个数大于等于k，也不用管
+    if (currentPage.getElementsSize() &gt;= k + 1) {
+        return;
+    }
+    Page parentPage = parentElement.getPage();
+    int left = parentElement.getIndex() - 1 &lt; 0 ? parentElement.getIndex() + 1 : parentElement.getIndex();
+    int right = parentElement.getIndex() + 1 &gt;= parentPage.getElementsSize() ? parentElement.getIndex() : parentElement.getIndex() + 1;
+    for (int i = left; i &lt;= right; i++) {
+        int leftSize = parentPage.getElement(i - 1).getRightIndex().getElementsSize();
+        int rightSize = parentPage.getElement(i).getRightIndex().getElementsSize();
+        if (leftSize + rightSize - 2 &lt; k &lt;&lt; 1) {
+            catenated(parentPage.getElement(i));
+            adjust(parentPage);
+            return;
+        }
+        if (leftSize + rightSize - 2 &gt;= k &lt;&lt; 1) {
+            underflow(parentPage.getElement(i));
+            return;
+        }
+    }
+}
+
+private void catenated(Element element) {
+    Page leftPage = element.getPage().getElement(element.getIndex() - 1).getRightIndex();
+    Page rightPage = element.getRightIndex();
+    //删除父页中的元素
+    element.getPage().delete(element.getIndex());
+    //将删除的元素添加至右页中
+    rightPage.getElement(0).setV(element.getV());
+    for (int i = 0; i &lt; rightPage.getElementsSize(); i++) {
+        leftPage.addElement(rightPage.getElement(i));
+    }
+
+}
+
+private void underflow(Element element) {
+    Page leftPage = element.getPage().getElement(element.getIndex() - 1).getRightIndex();
+    Page rightPage = element.getRightIndex();
+    List&lt;Element&gt; tmp = new ArrayList&lt;Element&gt;();
+    for (int i = 0; i &lt; leftPage.getElementsSize(); i++) {
+        tmp.add(leftPage.getElement(i));
+    }
+    rightPage.getElement(0).setV(element.getV());
+    for (int i = 0; i &lt; rightPage.getElementsSize(); i++) {
+        tmp.add(rightPage.getElement(i));
+    }
+    //计算出中值索引
+    int midIndex = tmp.size() / 2;
+    //替换元素值
+    element.setV(tmp.get(midIndex).getV());
+    tmp.get(midIndex).setV(null);
+    //更新左页
+    for (int i = 1; i &lt; leftPage.getElementsSize(); i++) {
+        leftPage.getElements()[i] = null;
+    }
+    leftPage.setElementsSize(1);
+    for (int i = 1; i &lt; midIndex; i++) {
+        leftPage.addElement(i, tmp.get(i));
+    }
+    //更新右页
+    for (int i = 0; i &lt; rightPage.getElementsSize(); i++) {
+        rightPage.getElements()[i] = null;
+    }
+    rightPage.setElementsSize(0);
+    for (int i = midIndex; i &lt; tmp.size(); i++) {
+        rightPage.addElement(i - midIndex, tmp.get(i));
+    }
+}
+
+public static void dfs(Page tmp) {
+    if (tmp == null) {
+        return;
+    }
+    for (int i = 0; i &lt; tmp.getElementsSize(); i++) {
+        if (tmp.getElement(i).getV() != null) {
+            System.out.print(&quot; &quot; + tmp.getElement(i).getV());
+        }
+        dfs(tmp.getElement(i).getRightIndex());
+    }
+}
+
+public static void main(String[] args) {
+
+    BTree bTree = new BTree(2);
+    for (int i = 100; i &gt;= 1; i--) {
+        bTree.insert(i);
+        dfs(bTree.getRoot());
+        System.out.println();
+    }
+    for (int i = 1; i &lt;= 25; i++) {
+        System.out.println(bTree.search(i).getV());
+    }
+    for (int i = 1; i &lt;= 25; i++) {
+        Random random = new Random();
+        int x = random.nextInt(100) % 100;
+        System.out.print(&quot;delete:&quot; + x + &quot; &quot;);
+        System.out.println(bTree.delete(x));
+        dfs(bTree.getRoot());
+        System.out.println();
+    }
+
+}
+}
+</code></pre><h2 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B+Tree"></a>B+Tree</h2><p>谈完了Btree我们再来谈谈B+Tree，所谓的B+Tree一直没有找到明确的出处和定义，所以这里谈的B+Tree指的是使用最多的定义，也就是mysql中innodb引擎被使用得最多的索引结构</p>
+<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>B+Tree 的定义与BTree大体上一致，只有一个唯一的不同点，那就是所有的数据都保存在叶子节点中，非叶子节点中只保留索引信息</p>
+<h3 id="查询，插入，删除"><a href="#查询，插入，删除" class="headerlink" title="查询，插入，删除"></a>查询，插入，删除</h3><p>这些操作都同BTree保持一致</p>
+<h3 id="innodb索引的页分裂和页合并"><a href="#innodb索引的页分裂和页合并" class="headerlink" title="innodb索引的页分裂和页合并"></a>innodb索引的页分裂和页合并</h3><p>想了解在实际使用中innodb是如何管理索引树的合并和分裂的，可以查看<a href="https://www.percona.com/blog/2017/04/10/innodb-page-merging-and-page-splitting/" target="_blank" rel="noopener">这篇文章</a></p>
 
       
     </div>
@@ -478,9 +920,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/JVM/" rel="tag"># JVM</a>
+            <a href="/tags/B-Tree/" rel="tag"># B-Tree</a>
           
-            <a href="/tags/Full-GC/" rel="tag"># Full GC</a>
+            <a href="/tags/B-Tree/" rel="tag"># B+Tree</a>
           
         </div>
       
@@ -493,8 +935,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/11/09/File类/" rel="next" title="Java基础篇 IO系列之File类">
-                <i class="fa fa-chevron-left"></i> Java基础篇 IO系列之File类
+              <a href="/2019/11/14/fullgc/" rel="next" title="杂谈之什么是FullGC">
+                <i class="fa fa-chevron-left"></i> 杂谈之什么是FullGC
               </a>
             
           </div>
@@ -502,10 +944,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/02/22/BTree/" rel="prev" title="J谈谈B-Tree 和 B+Tree">
-                J谈谈B-Tree 和 B+Tree <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -646,7 +1084,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前置知识点"><span class="nav-number">2.1.</span> <span class="nav-text">前置知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GC"><span class="nav-number">2.1.1.</span> <span class="nav-text">GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Young-space"><span class="nav-number">2.1.2.</span> <span class="nav-text">Young space</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Tenured-space"><span class="nav-number">2.1.3.</span> <span class="nav-text">Tenured space</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Minor-GC"><span class="nav-number">2.1.4.</span> <span class="nav-text">Minor GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Major-GC"><span class="nav-number">2.1.5.</span> <span class="nav-text">Major GC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stop-the-world"><span class="nav-number">2.1.6.</span> <span class="nav-text">stop the world</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是Full-GC"><span class="nav-number">2.2.</span> <span class="nav-text">什么是Full GC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#大众认知上"><span class="nav-number">2.2.1.</span> <span class="nav-text">大众认知上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从GC日志上"><span class="nav-number">2.2.2.</span> <span class="nav-text">从GC日志上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#从JDK自带的工具上"><span class="nav-number">2.2.3.</span> <span class="nav-text">从JDK自带的工具上</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#其他含义（坑爹版）"><span class="nav-number">2.2.4.</span> <span class="nav-text">其他含义（坑爹版）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结束语"><span class="nav-number">3.</span> <span class="nav-text">结束语</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#谈谈B-Tree-和-B-Tree"><span class="nav-number">1.</span> <span class="nav-text">谈谈B-Tree 和 B+Tree</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是B-Tree"><span class="nav-number">1.2.</span> <span class="nav-text">什么是B-Tree</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关于B-Tree这个名词的说明"><span class="nav-number">1.2.1.</span> <span class="nav-text">关于B-Tree这个名词的说明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#B-Tree-的定义"><span class="nav-number">1.2.2.</span> <span class="nav-text">B-Tree 的定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#B-Tree在索引存储上的使用"><span class="nav-number">1.2.3.</span> <span class="nav-text">B-Tree在索引存储上的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-Tree支持的基本操作"><span class="nav-number">1.3.</span> <span class="nav-text">B-Tree支持的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查找"><span class="nav-number">1.3.1.</span> <span class="nav-text">查找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入"><span class="nav-number">1.3.2.</span> <span class="nav-text">插入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#页分裂"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">页分裂</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">1.3.3.</span> <span class="nav-text">删除</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#页合并"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">页合并</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Catenation"><span class="nav-number">1.3.3.1.1.</span> <span class="nav-text">Catenation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Underflow"><span class="nav-number">1.3.3.1.2.</span> <span class="nav-text">Underflow</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-Tree-java代码实现"><span class="nav-number">1.4.</span> <span class="nav-text">B-Tree java代码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-Tree"><span class="nav-number">1.5.</span> <span class="nav-text">B+Tree</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义"><span class="nav-number">1.5.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询，插入，删除"><span class="nav-number">1.5.2.</span> <span class="nav-text">查询，插入，删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#innodb索引的页分裂和页合并"><span class="nav-number">1.5.3.</span> <span class="nav-text">innodb索引的页分裂和页合并</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>

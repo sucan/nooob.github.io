@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[新开一个算法学习项目]]></title>
+    <url>%2F2020%2F09%2F06%2F%E6%96%B0%E5%BC%80%E4%B8%80%E4%B8%AA%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE%2F</url>
+    <content type="text"><![CDATA[把之前的codeforces以及leetcode和各大OJ的刷题记录做了一个整合，同时添加了算法学习过程中的一些代码实现，面试过程中遇到过的题目等新创建了一个public的项目，统一维护 项目地址：https://github.com/sucan/algorithm]]></content>
+  </entry>
+  <entry>
     <title><![CDATA[技能树]]></title>
     <url>%2F2020%2F09%2F06%2F%E6%8A%80%E8%83%BD%E6%A0%91%2F</url>
     <content type="text"><![CDATA[在很早之前就有一个想法，就是把自己学过的东西做一个系统性的整理归类，也就是加个索引，维护一下自己的技能树 这么做主要有两个目的，一个是便于查缺补漏，明白自己会什么不会什么接下来应该去学什么，另一个目的是给自己一个正向的激励，每天或者每周看着自己的技能树不停增加完善会有一种满足感毕竟一个长期的计划如果没有短期的正向反馈的话，通常的结果就是三分钟热度。 技能树打算以笔记的形式来进行维护，方便查缺补漏时进行回想，同时笔记会放在github上，方便与他人进行交流，也便于其他人了解自己 项目地址：https://github.com/sucan/skill-tree]]></content>
